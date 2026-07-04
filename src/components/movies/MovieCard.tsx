@@ -6,11 +6,17 @@ import { CinematicButton } from "@/components/ui/CinematicButton";
 
 type MovieCardProps = {
   movie: Movie;
+  hasVoted?: boolean;
   onDetails: (movie: Movie) => void;
   onVote: (movie: Movie) => void;
 };
 
-export function MovieCard({ movie, onDetails, onVote }: MovieCardProps) {
+export function MovieCard({
+  movie,
+  hasVoted = false,
+  onDetails,
+  onVote,
+}: MovieCardProps) {
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
@@ -78,12 +84,13 @@ export function MovieCard({ movie, onDetails, onVote }: MovieCardProps) {
           </CinematicButton>
           <CinematicButton
             className="min-h-10 px-3 text-xs"
+            disabled={hasVoted}
             onClick={(event) => {
               event.stopPropagation();
               onVote(movie);
             }}
           >
-            Vote
+            {hasVoted ? "Voted" : "Vote"}
           </CinematicButton>
         </div>
       </div>

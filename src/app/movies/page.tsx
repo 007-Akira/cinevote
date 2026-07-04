@@ -2,26 +2,43 @@
 
 import { useEffect, useState } from "react";
 import { movies } from "@/data/movies";
-import type { Movie, UserProfile } from "@/types";
+import type { Movie, UserProfile, Vote } from "@/types";
 import { FilmGrain } from "@/components/layout/FilmGrain";
 import { TopBar } from "@/components/layout/TopBar";
 import { MovieCard } from "@/components/movies/MovieCard";
 import { MovieDetailsSheet } from "@/components/movies/MovieDetailsSheet";
+import { VoteConfirmModal } from "@/components/movies/VoteConfirmModal";
+import { VoteSuccessCard } from "@/components/movies/VoteSuccessCard";
 import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
 import { ensureDeviceId } from "@/lib/device";
-import { getStoredProfile, saveProfile } from "@/lib/storage";
+import {
+  getStoredProfile,
+  getStoredVote,
+  saveProfile,
+  saveVote,
+} from "@/lib/storage";
 
 export default function MoviesPage() {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [pendingVoteMovie, setPendingVoteMovie] = useState<Movie | null>(null);
+  const [deviceId, setDeviceId] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [storedVote, setStoredVote] = useState<Vote | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [voteMessage, setVoteMessage] = useState<string | null>(null);
 
   useEffect(() => {
     queueMicrotask(() => {
-      ensureDeviceId();
+      const nextDeviceId = ensureDeviceId();
+      setDeviceId(nextDeviceId);
 
       const storedProfile = getStoredProfile();
+      const existingVote = getStoredVote();
+
+      if (existingVote) {
+        setStoredVote(existingVote);
+        setVoteMessage("You have already voted from this browser.");
+      }
 
       if (storedProfile) {
         setProfile(storedProfile);
@@ -33,14 +50,18 @@ export default function MoviesPage() {
   }, []);
 
   function handleVote(movie: Movie) {
+    if (storedVote) {
+      setVoteMessage("You have already voted from this browser.");
+      return;
+    }
+
     if (!profile) {
       setVoteMessage("Complete onboarding before voting.");
       setShowOnboarding(true);
       return;
     }
 
-    setVoteMessage(`Vote saved for ${movie.title}`);
-    setSelectedMovie(null);
+    setPendingVoteMovie(movie);
   }
 
   function handleOnboardingComplete(nextProfile: UserProfile) {
@@ -49,6 +70,33 @@ export default function MoviesPage() {
     setShowOnboarding(false);
     setVoteMessage("Profile saved. You can vote now.");
   }
+
+  function handleConfirmVote(movie: Movie) {
+    if (storedVote) {
+      setPendingVoteMovie(null);
+      setVoteMessage("You have already voted from this browser.");
+      return;
+    }
+
+    const nextDeviceId = deviceId ?? ensureDeviceId();
+    const vote: Vote = {
+      movieId: movie.id,
+      deviceId: nextDeviceId,
+      votedAt: new Date().toISOString(),
+    };
+
+    saveVote(vote);
+    setDeviceId(nextDeviceId);
+    setStoredVote(vote);
+    setSelectedMovie(null);
+    setPendingVoteMovie(null);
+    setVoteMessage(`Vote recorded for ${movie.title}`);
+  }
+
+  const votedMovie = storedVote
+    ? movies.find((movie) => movie.id === storedVote.movieId) ?? null
+    : null;
+  const hasVoted = Boolean(storedVote);
 
   return (
     <main className="relative min-h-dvh overflow-x-hidden safe-bottom-lg">
@@ -100,17 +148,26 @@ export default function MoviesPage() {
             <MovieCard
               key={movie.id}
               movie={movie}
+              hasVoted={hasVoted}
               onDetails={setSelectedMovie}
               onVote={handleVote}
             />
           ))}
         </div>
+
+        {votedMovie ? <VoteSuccessCard movie={votedMovie} /> : null}
       </section>
 
       <MovieDetailsSheet
         movie={selectedMovie}
+        hasVoted={hasVoted}
         onClose={() => setSelectedMovie(null)}
         onVote={handleVote}
+      />
+      <VoteConfirmModal
+        movie={pendingVoteMovie}
+        onCancel={() => setPendingVoteMovie(null)}
+        onConfirm={handleConfirmVote}
       />
       <OnboardingModal
         isOpen={showOnboarding}

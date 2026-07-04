@@ -5,12 +5,14 @@ import { CinematicButton } from "@/components/ui/CinematicButton";
 
 type MovieDetailsSheetProps = {
   movie: Movie | null;
+  hasVoted?: boolean;
   onClose: () => void;
   onVote: (movie: Movie) => void;
 };
 
 export function MovieDetailsSheet({
   movie,
+  hasVoted = false,
   onClose,
   onVote,
 }: MovieDetailsSheetProps) {
@@ -99,9 +101,10 @@ export function MovieDetailsSheet({
             <div className="grid gap-3 sm:grid-cols-2">
               <CinematicButton
                 className="w-full"
+                disabled={hasVoted}
                 onClick={() => onVote(movie)}
               >
-                Vote for this movie
+                {hasVoted ? "Already voted" : "Vote for this movie"}
               </CinematicButton>
               <CinematicButton
                 variant="secondary"
