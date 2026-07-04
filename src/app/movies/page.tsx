@@ -26,6 +26,8 @@ export default function MoviesPage() {
   const [storedVote, setStoredVote] = useState<Vote | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [voteMessage, setVoteMessage] = useState<string | null>(null);
+  const [voteError, setVoteError] = useState<string | null>(null);
+  const [isSubmittingVote, setIsSubmittingVote] = useState(false);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -62,6 +64,7 @@ export default function MoviesPage() {
     }
 
     setPendingVoteMovie(movie);
+    setVoteError(null);
   }
 
   function handleOnboardingComplete(nextProfile: UserProfile) {
@@ -71,26 +74,79 @@ export default function MoviesPage() {
     setVoteMessage("Profile saved. You can vote now.");
   }
 
-  function handleConfirmVote(movie: Movie) {
+  async function handleConfirmVote(movie: Movie) {
     if (storedVote) {
       setPendingVoteMovie(null);
       setVoteMessage("You have already voted from this browser.");
       return;
     }
 
-    const nextDeviceId = deviceId ?? ensureDeviceId();
-    const vote: Vote = {
-      movieId: movie.id,
-      deviceId: nextDeviceId,
-      votedAt: new Date().toISOString(),
-    };
+    if (!profile) {
+      setVoteError("Complete onboarding before voting.");
+      setShowOnboarding(true);
+      return;
+    }
 
-    saveVote(vote);
-    setDeviceId(nextDeviceId);
-    setStoredVote(vote);
-    setSelectedMovie(null);
-    setPendingVoteMovie(null);
-    setVoteMessage(`Vote recorded for ${movie.title}`);
+    const nextDeviceId = deviceId ?? ensureDeviceId();
+    setIsSubmittingVote(true);
+    setVoteError(null);
+
+    try {
+      const response = await fetch("/api/vote", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          deviceId: nextDeviceId,
+          movieId: movie.id,
+          profile: {
+            name: profile.name,
+            year: profile.yearOfStudy,
+            department: profile.department,
+          },
+        }),
+      });
+
+      const result = (await response.json()) as {
+        error?: string;
+        vote?: Vote;
+        movie?: Movie | null;
+      };
+
+      if (response.ok && result.vote) {
+        saveVote(result.vote);
+        setDeviceId(nextDeviceId);
+        setStoredVote(result.vote);
+        setSelectedMovie(null);
+        setPendingVoteMovie(null);
+        setVoteMessage(`Vote recorded for ${movie.title}`);
+        return;
+      }
+
+      if (response.status === 403) {
+        setVoteError("Voting is currently closed.");
+        setVoteMessage("Voting is currently closed.");
+        return;
+      }
+
+      if (response.status === 409) {
+        if (result.vote) {
+          saveVote(result.vote);
+          setStoredVote(result.vote);
+        }
+
+        setPendingVoteMovie(null);
+        setVoteMessage("You have already voted from this browser.");
+        return;
+      }
+
+      setVoteError(result.error ?? "Could not record your vote. Try again.");
+    } catch {
+      setVoteError("Could not reach the voting server. Try again.");
+    } finally {
+      setIsSubmittingVote(false);
+    }
   }
 
   const votedMovie = storedVote
@@ -166,6 +222,8 @@ export default function MoviesPage() {
       />
       <VoteConfirmModal
         movie={pendingVoteMovie}
+        errorMessage={voteError}
+        isSubmitting={isSubmittingVote}
         onCancel={() => setPendingVoteMovie(null)}
         onConfirm={handleConfirmVote}
       />

@@ -28,6 +28,8 @@ create table if not exists public.voters (
   department text not null check (
     department in ('CSE', 'ECE', 'EEE', 'ME', 'CE', 'AI/DS', 'MCA', 'Other')
   ),
+  ip_hash text,
+  user_agent_hash text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -37,26 +39,114 @@ create table if not exists public.votes (
   movie_id text not null references public.movies(id) on delete restrict,
   voter_id uuid references public.voters(id) on delete set null,
   device_id text not null unique,
+  ip_hash text,
+  user_agent_hash text,
   voted_at timestamptz not null default now()
 );
 
 create table if not exists public.poll_settings (
-  id boolean primary key default true,
+  id text primary key default 'main',
   poll_title text not null default 'CineVote Movie Screening',
   is_voting_open boolean not null default true,
   screening_note text not null default 'Screening date coming soon. Stay tuned for the final announcement.',
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint poll_settings_singleton check (id)
+  updated_at timestamptz not null default now()
 );
 
 create index if not exists movies_sort_order_idx on public.movies(sort_order);
 create index if not exists movies_is_active_idx on public.movies(is_active);
 create index if not exists voters_department_idx on public.voters(department);
 create index if not exists voters_year_of_study_idx on public.voters(year_of_study);
+create index if not exists voters_ip_hash_idx on public.voters(ip_hash);
 create index if not exists votes_movie_id_idx on public.votes(movie_id);
 create index if not exists votes_voted_at_idx on public.votes(voted_at);
+create index if not exists votes_ip_hash_idx on public.votes(ip_hash);
+
+insert into public.movies (
+  id,
+  title,
+  language,
+  genre,
+  runtime,
+  rating,
+  hook,
+  summary,
+  why_screen,
+  poster_url,
+  backdrop_url,
+  sort_order
+)
+values
+  (
+    'movie-1',
+    'Interstellar',
+    'English',
+    'Sci-Fi',
+    '169 min',
+    '8.7',
+    'A massive space journey built for a dark hall, big sound, and full attention.',
+    'A team of explorers travels through a wormhole in search of a new home for humanity, while time, memory, and sacrifice collide across galaxies. Its vast visuals, thunderous score, and emotional scale make it the kind of movie that feels bigger with a student crowd.',
+    'It works beautifully for a college screening because the visuals, score, and emotional scale feel much bigger with a crowd.',
+    '/movies/movie-1.jpg',
+    '/movies/movie-1.jpg',
+    1
+  ),
+  (
+    'movie-2',
+    'The Dark Knight',
+    'English',
+    'Action Thriller',
+    '152 min',
+    '9.0',
+    'A tense, crowd-pleasing superhero thriller with iconic moments from start to finish.',
+    'Batman faces a criminal mastermind who pushes Gotham into chaos and forces its heroes to make impossible choices. Packed with sharp tension, iconic performances, and explosive set pieces, it is a high-energy screening pick that keeps the room locked in.',
+    'The action, performances, and sharp moral stakes make it an easy pick for a high-energy student audience.',
+    '/movies/movie-2.jpg',
+    '/movies/movie-2.jpg',
+    2
+  ),
+  (
+    'movie-3',
+    '3 Idiots',
+    'Hindi',
+    'Comedy Drama',
+    '170 min',
+    '8.4',
+    'A funny, emotional campus story that still hits close to home for students.',
+    'Three engineering students navigate friendship, pressure, and ambition while questioning what success should really mean. The comedy is easy to enjoy with a crowd, but the student-life moments give it a warm emotional pull that fits a college screening perfectly.',
+    'It is relatable, quotable, and ideal for a mixed crowd because it balances comedy with a strong student-life message.',
+    '/movies/movie-3.jpg',
+    '/movies/movie-3.jpg',
+    3
+  ),
+  (
+    'movie-4',
+    'Inception',
+    'English',
+    'Sci-Fi Thriller',
+    '148 min',
+    '8.8',
+    'A sleek mind-bending thriller that gives the audience plenty to debate after the credits.',
+    'A skilled thief enters dreams to steal secrets, then takes on a dangerous mission to plant an idea instead. With layered puzzles, dream-bending action, and a score that fills the room, it gives the audience plenty to talk about after the credits.',
+    'Its puzzles, set pieces, and soundtrack make it a strong big-screen option with a lot of post-movie conversation value.',
+    '/movies/movie-4.jpg',
+    '/movies/movie-4.jpg',
+    4
+  )
+on conflict (id) do update set
+  title = excluded.title,
+  language = excluded.language,
+  genre = excluded.genre,
+  runtime = excluded.runtime,
+  rating = excluded.rating,
+  hook = excluded.hook,
+  summary = excluded.summary,
+  why_screen = excluded.why_screen,
+  poster_url = excluded.poster_url,
+  backdrop_url = excluded.backdrop_url,
+  sort_order = excluded.sort_order,
+  updated_at = now();
 
 insert into public.poll_settings (id)
-values (true)
+values ('main')
 on conflict (id) do nothing;

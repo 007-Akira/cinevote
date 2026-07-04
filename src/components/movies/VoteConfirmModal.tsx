@@ -5,12 +5,16 @@ import { CinematicButton } from "@/components/ui/CinematicButton";
 
 type VoteConfirmModalProps = {
   movie: Movie | null;
+  errorMessage?: string | null;
+  isSubmitting?: boolean;
   onCancel: () => void;
   onConfirm: (movie: Movie) => void;
 };
 
 export function VoteConfirmModal({
   movie,
+  errorMessage = null,
+  isSubmitting = false,
   onCancel,
   onConfirm,
 }: VoteConfirmModalProps) {
@@ -44,13 +48,24 @@ export function VoteConfirmModal({
 
         <MovieVotePreview movie={movie} />
 
+        {errorMessage ? (
+          <p className="rounded-lg border border-cine-red/40 bg-cine-red/10 px-4 py-3 text-sm font-semibold text-cine-text-primary">
+            {errorMessage}
+          </p>
+        ) : null}
+
         <div className="grid gap-3 sm:grid-cols-2">
-          <CinematicButton className="w-full" onClick={() => onConfirm(movie)}>
-            Confirm Vote
+          <CinematicButton
+            className="w-full"
+            disabled={isSubmitting}
+            onClick={() => onConfirm(movie)}
+          >
+            {isSubmitting ? "Recording..." : "Confirm Vote"}
           </CinematicButton>
           <CinematicButton
             variant="secondary"
             className="w-full"
+            disabled={isSubmitting}
             onClick={onCancel}
           >
             Cancel

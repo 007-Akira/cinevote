@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Anton";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("/fonts/anton-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("/fonts/geist-latin-wght-normal.woff2") format("woff2");
+}
+
 :root {
   --background: #121414;
   --foreground: #fafafa;
@@ -11,6 +27,8 @@
   --cine-text-primary: #fafafa;
   --cine-text-secondary: #e9bcb6;
   --cine-text-muted: #a1a1aa;
+  --font-anton: "Anton";
+  --font-geist: "Geist";
 }
 
 @theme inline {

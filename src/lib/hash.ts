@@ -7,3 +7,7 @@ export function sha256(value: string) {
 export function hashDeviceId(deviceId: string) {
   return sha256(deviceId.trim());
 }
+
+export function hashRequestSignal(value: string | null) {
+  return value ? sha256(value.trim()) : null;
+}
