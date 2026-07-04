@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CineVote - Movie Screening Night</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-container": "#e50914",
+                      "surface-variant": "#333535",
+                      "primary": "#ffb4aa",
+                      "on-surface-variant": "#e9bcb6",
+                      "outline-variant": "#5e3f3b",
+                      "on-error-container": "#ffdad6",
+                      "tertiary-fixed-dim": "#c8c6c8",
+                      "surface-bright": "#38393a",
+                      "on-tertiary-fixed": "#1b1b1d",
+                      "tertiary-fixed": "#e5e1e4",
+                      "tertiary-container": "#737274",
+                      "on-background": "#e2e2e2",
+                      "error": "#ffb4ab",
+                      "surface-dim": "#121414",
+                      "on-tertiary-container": "#fcf8fb",
+                      "inverse-primary": "#c0000c",
+                      "secondary-fixed-dim": "#c8c6c8",
+                      "on-primary-container": "#fff7f6",
+                      "secondary-container": "#474649",
+                      "secondary-fixed": "#e5e1e4",
+                      "on-surface": "#e2e2e2",
+                      "surface-container": "#1e2020",
+                      "on-primary": "#690003",
+                      "on-error": "#690005",
+                      "surface-container-high": "#282a2b",
+                      "inverse-surface": "#e2e2e2",
+                      "on-secondary-container": "#b7b4b7",
+                      "primary-fixed": "#ffdad5",
+                      "tertiary": "#c8c6c8",
+                      "primary-fixed-dim": "#ffb4aa",
+                      "secondary": "#c8c6c8",
+                      "on-primary-fixed": "#410001",
+                      "background": "#121414",
+                      "on-secondary-fixed": "#1c1b1d",
+                      "error-container": "#93000a",
+                      "on-secondary": "#313032",
+                      "outline": "#af8782",
+                      "surface-tint": "#ffb4aa",
+                      "surface-container-highest": "#333535",
+                      "on-secondary-fixed-variant": "#474649",
+                      "on-tertiary": "#303032",
+                      "surface-container-lowest": "#0c0f0f",
+                      "inverse-on-surface": "#2f3131",
+                      "surface-container-low": "#1a1c1c",
+                      "surface": "#121414",
+                      "on-tertiary-fixed-variant": "#474649",
+                      "on-primary-fixed-variant": "#930007"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "container-margin": "20px",
+                      "gutter": "16px",
+                      "md": "24px",
+                      "xs": "4px",
+                      "base": "8px",
+                      "xl": "80px",
+                      "sm": "12px",
+                      "lg": "48px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Geist"
+                      ],
+                      "label-sm": [
+                              "Geist"
+                      ],
+                      "body-lg": [
+                              "Geist"
+                      ],
+                      "headline-lg": [
+                              "Anton"
+                      ],
+                      "headline-lg-mobile": [
+                              "Anton"
+                      ],
+                      "headline-md": [
+                              "Anton"
+                      ],
+                      "display-lg": [
+                              "Anton"
+                      ],
+                      "label-md": [
+                              "Geist"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .film-grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+            width: 100%;
+        }
+        
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 15s linear infinite;
+        }
+        
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .glow-shadow {
+            box-shadow: 0 0 20px rgba(229, 9, 20, 0.4);
+        }
+        
+        .glass-panel {
+            background: rgba(9, 9, 11, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(229, 9, 20, 0.2);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen relative overflow-x-hidden selection:bg-primary-container selection:text-white">
+<!-- Global Film Grain -->
+<div class="film-grain"></div>
+<!-- Ambient Background Glows -->
+<div class="fixed top-0 left-1/2 -translate-x-1/2 w-[200vw] h-[442px] bg-primary-container/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+<div class="fixed bottom-0 right-[-50vw] w-[150vw] h-[442px] bg-primary-container/5 blur-[100px] rounded-full pointer-events-none -z-10"></div>
+<!-- Top Navigation (Shell logic: hidden on transactional/landing unless required, but keeping branding) -->
+<header class="fixed top-0 w-full z-50 bg-surface/70 backdrop-blur-xl border-b border-primary-container/20 shadow-[0_4_30px_rgba(0,0,0,0.5)] flex justify-between items-center px-container-margin h-16">
+<button class="text-on-surface-variant hover:text-primary-container transition-colors scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile tracking-tighter text-primary-container drop-shadow-[0_0_10px_rgba(229,9,20,0.6)]">CINEVOTE</h1>
+<button class="text-on-surface-variant hover:text-primary-container transition-colors scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+</header>
+<main class="pt-24 pb-32 px-container-margin flex flex-col gap-lg items-center text-center">
+<!-- Hero Section -->
+<section class="flex flex-col items-center mt-md w-full max-w-sm mx-auto">
+<!-- Small top badge -->
+<div class="inline-flex items-center gap-xs px-sm py-xs rounded-full border border-primary-container/30 bg-primary-container/10 mb-md">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-primary-container uppercase tracking-widest">College Movie Screening</span>
+</div>
+<!-- Main Heading -->
+<h2 class="font-display-lg text-display-lg text-white mb-sm drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)]">Movie Screening Night</h2>
+<!-- Tagline -->
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-md">Choose the movie. Own the night.</p>
+<!-- Status Badge -->
+<div class="glass-panel px-md py-sm rounded-lg mb-lg inline-block">
+<span class="font-label-md text-label-md text-white uppercase tracking-widest">Coming Soon</span>
+</div>
+<!-- Cinematic Posters Area -->
+<div class="relative w-full h-80 mb-lg flex justify-center items-center">
+<!-- Back Left Poster -->
+<div class="absolute left-4 top-10 w-32 h-48 rounded-lg overflow-hidden border border-white/10 opacity-60 transform -rotate-6 scale-90 glow-shadow z-0" data-alt="A moody, high-contrast cinematic movie poster placeholder featuring an abstract, dark sci-fi landscape with glowing red neon accents. Heavy film grain and a gritty texture give it a premium, underground event feel." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA9_8CGc3Sd9U7hxP7fnbsD_6N0bcEAqIGqTeFqgvmsgTQFYFlk1ZrwjZjjml08SNmO_vkYzJZLeWxH1V22WIGJcpohmf-UJG5SEoWivW0cWrfb0hzkPMqqX7BojnBQb4AVvuLMbi4NtREnBit2Dzh3FQCs-v7KiGRD0x-cWEkNnIUvCYCwtXzC37ouHfwwlIG-opj2muPk2ew8PYp1v5YYb92QjTneuqY19d8qgMVaFOSP1yK9QC2JCOIiLWto-bYkt6KQSCaI3cq-')"></div>
+<!-- Back Right Poster -->
+<div class="absolute right-4 top-12 w-32 h-48 rounded-lg overflow-hidden border border-white/10 opacity-60 transform rotate-12 scale-90 glow-shadow z-0" data-alt="A striking thriller movie poster placeholder showing a silhouette of a person running down a wet, dark alley illuminated by a harsh red neon sign. The style is heavily stylized with deep blacks and a gritty cinematic film grain overlay." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDOU-kJx_RgZhC2AmrZDYWfq70XxKlU0Ztj5kJb0jfY9oCVkJMsHGeSr4N13QQ8WmcPI2pWsQh5VULVtWQ8HyIUWaS5tDrmZufzBtbGyh9iHuqooLheXx9s7W35QpsXEmZYXOQHBhCJfCOb4CivIWATwaKCmMyoTOA_Wfi8Oi9MvcYb8kAbGR_YK75cmbk-4rVBYE0Gbv4xfQghn1SMjH0c_lDiV7e9FDU8IqCSx7E0jTQrv6y0kBvVEwNTmRbtb-mauJ4nRCck_1lq')"></div>
+<!-- Center Main Poster -->
+<div class="relative w-48 h-72 rounded-xl overflow-hidden glass-panel glow-shadow z-10 transform -translate-y-4 hover:scale-105 transition-transform duration-500 ease-out" data-alt="An intense, premium movie poster placeholder for a psychological drama. The image features a close-up of a partially obscured face in deep shadow, lit only by a strong, vibrant primary red light from the side. Glassmorphism framing and heavy film noise add depth and cinematic authority." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDyIuzgSWVqEspy7DAHKpYogQ4JeNHF2POeiK8rd3TzOTTDlnJbMeYQKE80l1mXGWobSw9csRobBkgNwA3Gr8ROYVA634XU5hsxklAihq5ecO1crlukI5TJJMy3O_rv_CH5LXtd-dbhKtxRutV50q3Ht9Ovm2XeLdm0d2aCEbf57xQGs0X4UrAAbcPQy6XahMhGGUMPuxPr2kAsIhwCIcw6cG5sngnsCEEIbTE__4CrfBT-gya2D_qAY14yk6GAQigupVDTwq0CxSGe')">
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+<div class="absolute bottom-4 left-4 right-4 flex flex-col items-start text-left">
+<span class="font-label-sm text-label-sm text-primary-container uppercase tracking-widest mb-1">Featured</span>
+<span class="font-headline-md text-headline-md text-white leading-tight">Mystery Feature</span>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="w-full flex flex-col gap-sm">
+<button class="w-full py-md bg-primary-container text-white font-label-md text-label-md uppercase tracking-widest rounded-lg hover:bg-inverse-primary transition-colors active:scale-95 duration-200 shadow-[0_0_15px_rgba(229,9,20,0.4)]">
+                    Vote Now
+                </button>
+<button class="w-full py-md bg-transparent text-white font-label-md text-label-md uppercase tracking-widest rounded-lg border-2 border-white/20 hover:border-primary-container hover:text-primary-container hover:shadow-[0_0_15px_rgba(229,9,20,0.2)] transition-all active:scale-95 duration-200">
+                    Explore Movies
+                </button>
+</div>
+</section>
+<!-- Scrolling Marquee -->
+<section class="w-screen relative left-[50%] -translate-x-[50%] bg-surface-container-high border-y border-primary-container/20 py-sm my-md overflow-hidden transform -rotate-2">
+<div class="marquee-container flex">
+<div class="marquee-content font-headline-md text-headline-md text-primary-container opacity-80 whitespace-nowrap">
+                    CHOOSE THE MOVIE • OWN THE NIGHT • VOTE NOW • CHOOSE THE MOVIE • OWN THE NIGHT • VOTE NOW • CHOOSE THE MOVIE • OWN THE NIGHT • VOTE NOW • 
+                </div>
+</div>
+</section>
+<!-- Event Info Card -->
+<section class="w-full max-w-sm mx-auto glass-panel p-md rounded-xl text-left relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary-container"></div>
+<div class="flex items-start gap-md">
+<span class="material-symbols-outlined text-primary-container text-[32px]" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
+<div>
+<h3 class="font-headline-md text-headline-md text-white mb-xs">Screening Info</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Screening date coming soon. Stay tuned for the final announcement.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full text-center pb-xl pt-lg border-t border-white/5 opacity-50 relative z-10">
+<p class="font-label-sm text-label-sm text-on-surface uppercase tracking-widest">Built for students. Decided by students.</p>
+</footer>
+</body></html>

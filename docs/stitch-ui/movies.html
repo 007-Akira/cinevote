@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CineVote - Vote</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Geist:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#e50914",
+                        "surface-variant": "#333535",
+                        "primary": "#ffb4aa",
+                        "on-surface-variant": "#e9bcb6",
+                        "outline-variant": "#5e3f3b",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#c8c6c8",
+                        "surface-bright": "#38393a",
+                        "on-tertiary-fixed": "#1b1b1d",
+                        "tertiary-fixed": "#e5e1e4",
+                        "tertiary-container": "#737274",
+                        "on-background": "#e2e2e2",
+                        "error": "#ffb4ab",
+                        "surface-dim": "#121414",
+                        "on-tertiary-container": "#fcf8fb",
+                        "inverse-primary": "#c0000c",
+                        "secondary-fixed-dim": "#c8c6c8",
+                        "on-primary-container": "#fff7f6",
+                        "secondary-container": "#474649",
+                        "secondary-fixed": "#e5e1e4",
+                        "on-surface": "#e2e2e2",
+                        "surface-container": "#1e2020",
+                        "on-primary": "#690003",
+                        "on-error": "#690005",
+                        "surface-container-high": "#282a2b",
+                        "inverse-surface": "#e2e2e2",
+                        "on-secondary-container": "#b7b4b7",
+                        "primary-fixed": "#ffdad5",
+                        "tertiary": "#c8c6c8",
+                        "primary-fixed-dim": "#ffb4aa",
+                        "secondary": "#c8c6c8",
+                        "on-primary-fixed": "#410001",
+                        "background": "#121414",
+                        "on-secondary-fixed": "#1c1b1d",
+                        "error-container": "#93000a",
+                        "on-secondary": "#313032",
+                        "outline": "#af8782",
+                        "surface-tint": "#ffb4aa",
+                        "surface-container-highest": "#333535",
+                        "on-secondary-fixed-variant": "#474649",
+                        "on-tertiary": "#303032",
+                        "surface-container-lowest": "#0c0f0f",
+                        "inverse-on-surface": "#2f3131",
+                        "surface-container-low": "#1a1c1c",
+                        "surface": "#121414",
+                        "on-tertiary-fixed-variant": "#474649",
+                        "on-primary-fixed-variant": "#930007"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-margin": "20px",
+                        "gutter": "16px",
+                        "md": "24px",
+                        "xs": "4px",
+                        "base": "8px",
+                        "xl": "80px",
+                        "sm": "12px",
+                        "lg": "48px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Geist"],
+                        "label-sm": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "headline-lg": ["Anton"],
+                        "headline-lg-mobile": ["Anton"],
+                        "headline-md": ["Anton"],
+                        "display-lg": ["Anton"],
+                        "label-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-lg": ["40px", { "lineHeight": "1.2", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["32px", { "lineHeight": "1.2", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "1.1", "letterSpacing": "0.02em", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .film-grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        .glass-card {
+            background-color: rgba(9, 9, 11, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(250, 250, 250, 0.1);
+        }
+        .glass-card:hover, .glass-card:focus-within {
+            border-color: rgba(229, 9, 20, 0.5);
+            box-shadow: 0 0 15px rgba(229, 9, 20, 0.2);
+        }
+        .trace-line {
+            position: relative;
+        }
+        .trace-line::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 1px solid rgba(229, 9, 20, 0.2);
+            pointer-events: none;
+            border-radius: inherit;
+        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen antialiased selection:bg-primary-container selection:text-white">
+<div class="film-grain"></div>
+<!-- TopAppBar Shared Component -->
+<header class="fixed top-0 w-full z-50 bg-surface/70 backdrop-blur-xl border-b border-primary-container/20 shadow-[0_4_30px_rgba(0,0,0,0.5)]">
+<div class="flex justify-between items-center px-container-margin h-16">
+<button class="text-on-surface-variant hover:text-primary-container transition-colors scale-95 duration-200">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile tracking-tighter text-primary-container drop-shadow-[0_0_10px_rgba(229,9,20,0.6)]">
+                CINEVOTE
+            </h1>
+<button class="text-on-surface-variant hover:text-primary-container transition-colors scale-95 duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</header>
+<main class="pt-24 pb-32 px-container-margin flex flex-col gap-lg">
+<!-- Header & Search -->
+<section class="flex flex-col gap-md">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Pick your poison</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Select the movie for tonight's screening.</p>
+</div>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary-container transition-colors">search</span>
+<input class="w-full bg-[#111113] text-on-surface border-0 border-l border-transparent focus:border-primary-container focus:ring-0 pl-12 pr-4 py-4 rounded-DEFAULT transition-all focus:shadow-[0_0_15px_rgba(229,9,20,0.4)] font-body-md outline-none" placeholder="Search films, directors, genres..." type="text"/>
+</div>
+</section>
+<!-- Movie List -->
+<section class="flex flex-col gap-md">
+<!-- Movie Card 1 -->
+<article class="glass-card rounded-xl overflow-hidden flex flex-col transition-all duration-300 trace-line">
+<div class="relative h-[400px] w-full">
+<img class="absolute inset-0 w-full h-full object-cover" data-alt="A dark, cinematic poster for a neo-noir sci-fi thriller. The scene features a lone figure silhouetted against a neon-drenched, rainy cyberpunk cityscape. Deep blacks and vibrant red neon signs dominate the lighting. The mood is tense, mysterious, and visually intense, embodying a high-contrast cinematic aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvw3vwvEh_pyf8BN98JKQ7LZY2aB20uC38nPEfDqJgS_YZsQx97hqqdRdzd_5IwK-QLVJiVLmPf_Qq5_SPf7bioXwbDaFLYVClzR4slsRWfSxhsBhQK2kkSKQNsuL9PoUssleNkNXU5bP3n4FKOFgEvE8EcYIV0Ef0lDSCbxmj6NHzL8jE1z-ihGBRra3ZUcPP0kQ_7gi8uj3bpC3X7KLm9pLBvNIRFvHYMXAOciYb15ICgPPwzAa__7uL51rOrJxcfN-J4-iG-Iv8"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#09090B] via-transparent to-transparent"></div>
+<div class="absolute top-4 right-4 bg-primary-container/90 backdrop-blur-sm px-3 py-1 rounded flex items-center gap-1 shadow-[0_0_10px_rgba(229,9,20,0.5)]">
+<span class="material-symbols-outlined text-[16px] text-white" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md text-white">4.8</span>
+</div>
+</div>
+<div class="p-4 flex flex-col gap-sm">
+<div class="flex flex-wrap gap-2 mb-1">
+<span class="px-2 py-0.5 bg-surface-container border border-outline-variant rounded-sm font-label-sm text-label-sm text-on-surface-variant uppercase">Sci-Fi</span>
+<span class="px-2 py-0.5 bg-surface-container border border-outline-variant rounded-sm font-label-sm text-label-sm text-on-surface-variant uppercase">ENG</span>
+<span class="px-2 py-0.5 bg-surface-container border border-outline-variant rounded-sm font-label-sm text-label-sm text-on-surface-variant uppercase">142 MIN</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface tracking-wide uppercase">Neon Echoes</h3>
+<p class="font-body-md text-body-md text-on-surface-variant italic opacity-80 mt-1">"In a city of whispers, silence is deadly."</p>
+</div>
+<div class="flex gap-gutter mt-2">
+<button class="flex-1 py-3 border-2 border-white/20 text-white font-label-md text-label-md uppercase tracking-widest hover:border-primary-container/50 hover:shadow-[0_0_15px_rgba(229,9,20,0.2)] transition-all rounded-sm text-center">Details</button>
+<button class="flex-[2] py-3 bg-primary-container text-white font-label-md text-label-md uppercase tracking-widest hover:bg-primary-container/90 hover:shadow-[0_0_20px_rgba(229,9,20,0.6)] transition-all rounded-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">how_to_vote</span> Vote
+                        </button>
+</div>
+</div>
+</article>
+<!-- Movie Card 2 -->
+<article class="glass-card rounded-xl overflow-hidden flex flex-col transition-all duration-300 trace-line">
+<div class="relative h-[400px] w-full">
+<img class="absolute inset-0 w-full h-full object-cover" data-alt="A gritty, high-contrast poster for a psychological thriller. A cracked mirror reflects a fragmented, terrified face. The lighting is harsh, predominantly utilizing deep shadows and stark white light, with subtle, ominous red undertones creeping in from the edges. The visual style is intense, disturbing, and cinematic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXdrSetR7hEHmGeeO0Pm4OY_5RdnE1c2U78z5Iddstqd0f78-paPu-cHxLazUHcrCNhN1500ucc6zf9g6oijVvJgNcdk4M6zUatWbtc1zx94KG6gEXa42uOEoEgrwC-_tjwAz-5N2Ryvd1Jurms7oNq8f-7TS-6KvmfmyoXA9fcFFFqmsZSZdkg48EcQoy6AJeTeZCIfIRCqCPhxGBLDJSkGwYTI8R2kUBkNPQrcMBuNFSL1tYbFyREWO5WUgEKxZWgVCNnRyD0WdO"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#09090B] via-transparent to-transparent"></div>
+</div>
+<div class="p-4 flex flex-col gap-sm">
+<div class="flex flex-wrap gap-2 mb-1">
+<span class="px-2 py-0.5 bg-surface-container border border-outline-variant rounded-sm font-label-sm text-label-sm text-on-surface-variant uppercase">Thriller</span>
+<span class="px-2 py-0.5 bg-surface-container border border-outline-variant rounded-sm font-label-sm text-label-sm text-on-surface-variant uppercase">KOR</span>
+<span class="px-2 py-0.5 bg-surface-container border border-outline-variant rounded-sm font-label-sm text-label-sm text-on-surface-variant uppercase">118 MIN</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface tracking-wide uppercase">Shattered Glass</h3>
+<p class="font-body-md text-body-md text-on-surface-variant italic opacity-80 mt-1">"The truth is never quite what you see."</p>
+</div>
+<div class="flex gap-gutter mt-2">
+<button class="flex-1 py-3 border-2 border-white/20 text-white font-label-md text-label-md uppercase tracking-widest hover:border-primary-container/50 hover:shadow-[0_0_15px_rgba(229,9,20,0.2)] transition-all rounded-sm text-center">Details</button>
+<button class="flex-[2] py-3 bg-primary-container text-white font-label-md text-label-md uppercase tracking-widest hover:bg-primary-container/90 hover:shadow-[0_0_20px_rgba(229,9,20,0.6)] transition-all rounded-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">how_to_vote</span> Vote
+                        </button>
+</div>
+</div>
+</article>
+</section>
+</main>
+<!-- BottomNavBar Shared Component -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-surface-container/70 backdrop-blur-xl border-t border-primary-container/10 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
+<div class="flex justify-around items-center h-20 pb-safe px-4">
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:opacity-100 transition-opacity active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1">movie</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Screenings</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary-container drop-shadow-[0_0_8px_rgba(229,9,20,0.8)] hover:opacity-100 transition-opacity active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">how_to_vote</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Vote</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:opacity-100 transition-opacity active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1">theaters</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Premiere</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:opacity-100 transition-opacity active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Profile</span>
+</a>
+</div>
+</nav>
+<script>
+        // Simple micro-interaction for vote buttons
+        document.querySelectorAll('button:has(.material-symbols-outlined:contains("how_to_vote"))').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const icon = this.querySelector('.material-symbols-outlined');
+                icon.style.fontVariationSettings = "'FILL' 1";
+                this.classList.add('scale-95');
+                setTimeout(() => {
+                    this.classList.remove('scale-95');
+                }, 150);
+            });
+        });
+    </script>
+</body></html>
