@@ -1,20 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { movies } from "@/data/movies";
-import type { Movie } from "@/types";
+import type { Movie, UserProfile } from "@/types";
 import { FilmGrain } from "@/components/layout/FilmGrain";
 import { TopBar } from "@/components/layout/TopBar";
 import { MovieCard } from "@/components/movies/MovieCard";
 import { MovieDetailsSheet } from "@/components/movies/MovieDetailsSheet";
+import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
+import { ensureDeviceId } from "@/lib/device";
+import { getStoredProfile, saveProfile } from "@/lib/storage";
 
 export default function MoviesPage() {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-  const [votedMovieId, setVotedMovieId] = useState<string | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [voteMessage, setVoteMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      ensureDeviceId();
+
+      const storedProfile = getStoredProfile();
+
+      if (storedProfile) {
+        setProfile(storedProfile);
+        return;
+      }
+
+      setShowOnboarding(true);
+    });
+  }, []);
 
   function handleVote(movie: Movie) {
-    setVotedMovieId(movie.id);
+    if (!profile) {
+      setVoteMessage("Complete onboarding before voting.");
+      setShowOnboarding(true);
+      return;
+    }
+
+    setVoteMessage(`Vote saved for ${movie.title}`);
     setSelectedMovie(null);
+  }
+
+  function handleOnboardingComplete(nextProfile: UserProfile) {
+    saveProfile(nextProfile);
+    setProfile(nextProfile);
+    setShowOnboarding(false);
+    setVoteMessage("Profile saved. You can vote now.");
   }
 
   return (
@@ -41,12 +74,25 @@ export default function MoviesPage() {
                 want on screening night.
               </p>
             </div>
-            {votedMovieId ? (
+            {voteMessage ? (
               <p className="rounded-full border border-cine-red/40 bg-cine-red/10 px-4 py-2 text-sm font-semibold text-cine-text-primary shadow-red-glow-sm">
-                Vote saved locally
+                {voteMessage}
               </p>
             ) : null}
           </div>
+          {profile ? (
+            <p className="text-sm text-cine-text-muted">
+              Voting as{" "}
+              <span className="font-semibold text-cine-text-secondary">
+                {profile.name}
+              </span>{" "}
+              • {profile.yearOfStudy} • {profile.department}
+            </p>
+          ) : (
+            <p className="text-sm text-cine-text-muted">
+              Complete onboarding to unlock voting.
+            </p>
+          )}
         </div>
 
         <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -65,6 +111,10 @@ export default function MoviesPage() {
         movie={selectedMovie}
         onClose={() => setSelectedMovie(null)}
         onVote={handleVote}
+      />
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onComplete={handleOnboardingComplete}
       />
     </main>
   );

@@ -11,3 +11,13 @@ export type Movie = {
   posterUrl: string;
   backdropUrl: string;
 };
+
+export type Department = "CSE" | "ECE" | "EEE" | "ME" | "CE" | "AI/DS" | "MCA" | "Other";
+
+export type YearOfStudy = "1st Year" | "2nd Year" | "3rd Year" | "4th Year";
+
+export type UserProfile = {
+  name: string;
+  yearOfStudy: YearOfStudy;
+  department: Department;
+};
