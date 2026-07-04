@@ -12,6 +12,7 @@ type TopBarProps = {
 const defaultNavItems: NavItem[] = [
   { href: "/", label: "Home" },
   { href: "/movies", label: "Movies" },
+  { href: "/live", label: "Live" },
   { href: "/admin", label: "Admin" },
 ];
 
