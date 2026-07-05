@@ -1,6 +1,7 @@
 create extension if not exists "pgcrypto";
 
 create table if not exists public.movies (
+  -- Static frontend movie IDs such as 'movie-1' are intentionally stored as text.
   id text primary key,
   title text not null,
   language text not null,
@@ -34,8 +35,45 @@ create table if not exists public.voters (
   updated_at timestamptz not null default now()
 );
 
+alter table public.voters
+  add column if not exists device_id text,
+  add column if not exists name text,
+  add column if not exists year_of_study text,
+  add column if not exists department text,
+  add column if not exists ip_hash text,
+  add column if not exists user_agent_hash text,
+  add column if not exists created_at timestamptz not null default now(),
+  add column if not exists updated_at timestamptz not null default now();
+
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'voters'
+      and column_name = 'year'
+  ) then
+    update public.voters
+    set year_of_study = year
+    where year_of_study is null;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'voters_device_id_key'
+      and conrelid = 'public.voters'::regclass
+  ) then
+    alter table public.voters
+      add constraint voters_device_id_key unique (device_id);
+  end if;
+end
+$$;
+
 create table if not exists public.votes (
   id uuid primary key default gen_random_uuid(),
+  -- References public.movies(id), which is text for the MVP static movie list.
   movie_id text not null references public.movies(id) on delete restrict,
   voter_id uuid references public.voters(id) on delete set null,
   device_id text not null unique,
@@ -44,14 +82,69 @@ create table if not exists public.votes (
   voted_at timestamptz not null default now()
 );
 
+create table if not exists public.vote_attempts (
+  id uuid primary key default gen_random_uuid(),
+  ip_hash text not null,
+  user_agent_hash text,
+  device_id text,
+  movie_id text,
+  status text not null,
+  reason text,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.poll_settings (
   id text primary key default 'main',
   poll_title text not null default 'CineVote Movie Screening',
-  is_voting_open boolean not null default true,
+  is_open boolean not null default true,
+  event_status text not null default 'coming_soon',
+  poll_starts_at timestamptz,
+  poll_closes_at timestamptz,
+  event_date timestamptz,
+  venue text,
   screening_note text not null default 'Screening date coming soon. Stay tuned for the final announcement.',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create table if not exists public.ticket_settings (
+  id text primary key default 'main',
+  is_live boolean not null default false,
+  total_tickets integer not null default 0 check (total_tickets >= 0),
+  booking_starts_at timestamptz,
+  booking_closes_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.tickets (
+  id uuid primary key default gen_random_uuid(),
+  ticket_code text not null unique,
+  device_id text not null unique,
+  voter_id uuid references public.voters(id) on delete set null,
+  movie_id text references public.movies(id) on delete set null,
+  student_name text not null,
+  year text not null check (
+    year in ('1st Year', '2nd Year', '3rd Year', '4th Year')
+  ),
+  department text not null check (
+    department in ('CSE', 'ECE', 'EEE', 'ME', 'CE', 'AI/DS', 'MCA', 'Other')
+  ),
+  qr_payload text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.poll_settings
+  add column if not exists poll_starts_at timestamptz,
+  add column if not exists poll_closes_at timestamptz,
+  add column if not exists event_date timestamptz,
+  add column if not exists venue text;
+
+alter table public.ticket_settings
+  add column if not exists is_live boolean not null default false,
+  add column if not exists total_tickets integer not null default 0,
+  add column if not exists booking_starts_at timestamptz,
+  add column if not exists booking_closes_at timestamptz,
+  add column if not exists updated_at timestamptz not null default now();
 
 create index if not exists movies_sort_order_idx on public.movies(sort_order);
 create index if not exists movies_is_active_idx on public.movies(is_active);
@@ -61,6 +154,13 @@ create index if not exists voters_ip_hash_idx on public.voters(ip_hash);
 create index if not exists votes_movie_id_idx on public.votes(movie_id);
 create index if not exists votes_voted_at_idx on public.votes(voted_at);
 create index if not exists votes_ip_hash_idx on public.votes(ip_hash);
+create index if not exists vote_attempts_ip_hash_created_at_idx on public.vote_attempts(ip_hash, created_at);
+create index if not exists vote_attempts_device_id_created_at_idx on public.vote_attempts(device_id, created_at);
+create index if not exists vote_attempts_status_created_at_idx on public.vote_attempts(status, created_at);
+create index if not exists tickets_created_at_idx on public.tickets(created_at);
+create index if not exists tickets_movie_id_idx on public.tickets(movie_id);
+create index if not exists tickets_department_idx on public.tickets(department);
+create index if not exists tickets_ticket_code_idx on public.tickets(ticket_code);
 
 insert into public.movies (
   id,
@@ -149,4 +249,8 @@ on conflict (id) do update set
 
 insert into public.poll_settings (id)
 values ('main')
+on conflict (id) do nothing;
+
+insert into public.ticket_settings (id, is_live, total_tickets)
+values ('main', false, 0)
 on conflict (id) do nothing;
