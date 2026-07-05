@@ -10,6 +10,7 @@ import { MovieDetailsSheet } from "@/components/movies/MovieDetailsSheet";
 import { VoteConfirmModal } from "@/components/movies/VoteConfirmModal";
 import { VoteSuccessCard } from "@/components/movies/VoteSuccessCard";
 import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
+import { CinematicButton } from "@/components/ui/CinematicButton";
 import { ensureDeviceId } from "@/lib/device";
 import {
   getStoredProfile,
@@ -134,8 +135,9 @@ export default function MoviesPage() {
       }
 
       if (response.status === 403) {
-        setVoteError("Voting is currently closed.");
-        setVoteMessage("Voting is currently closed.");
+        const message = formatVoteError(result);
+        setVoteError(message);
+        setVoteMessage(message);
         return;
       }
 
@@ -172,17 +174,17 @@ export default function MoviesPage() {
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_0%,rgb(229_9_20_/_0.2),transparent_24rem),radial-gradient(circle_at_100%_28%,rgb(233_188_182_/_0.08),transparent_20rem)]"
       />
 
-      <section className="mx-auto w-full max-w-6xl px-4 py-7 sm:px-6 sm:py-10">
-        <div className="space-y-3">
+      <section className="mx-auto w-full max-w-6xl px-4 py-11 sm:px-6 sm:py-10">
+        <div className="space-y-5 sm:space-y-3">
           <p className="w-fit rounded-full border border-cine-red/40 bg-cine-red/10 px-3 py-1 text-xs font-semibold uppercase text-cine-text-secondary">
             Choose your screening
           </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="font-anton text-5xl leading-none text-cine-text-primary sm:text-7xl">
                 Movies
               </h1>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-cine-text-secondary sm:text-base">
+              <p className="mt-3 max-w-xl text-sm leading-7 text-cine-text-secondary sm:mt-2 sm:text-base sm:leading-6">
                 Browse the shortlist, open details, and vote for the movie you
                 want on screening night.
               </p>
@@ -202,13 +204,21 @@ export default function MoviesPage() {
               • {profile.yearOfStudy} • {profile.department}
             </p>
           ) : (
-            <p className="text-sm text-cine-text-muted">
-              Complete onboarding to unlock voting.
-            </p>
+            <div className="flex flex-col gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-3">
+              <p className="text-sm text-cine-text-muted">
+                Complete onboarding to unlock voting.
+              </p>
+              <CinematicButton
+                className="min-h-10 w-full px-4 text-xs sm:w-auto"
+                onClick={() => setShowOnboarding(true)}
+              >
+                Start Setup
+              </CinematicButton>
+            </div>
           )}
         </div>
 
-        <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-6 sm:mt-7 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
           {movies.map((movie) => (
             <MovieCard
               key={movie.id}

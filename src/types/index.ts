@@ -15,12 +15,12 @@ export type Movie = {
 export type Department =
   | "CSE"
   | "ECE"
+  | "CSE(AI)"
+  | "ER"
+  | "CIVIL"
+  | "MECH"
   | "EEE"
-  | "ME"
-  | "CE"
-  | "AI/DS"
-  | "MCA"
-  | "Other";
+  | "CHEM";
 
 export type YearOfStudy = "1st Year" | "2nd Year" | "3rd Year" | "4th Year";
 

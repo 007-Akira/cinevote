@@ -7,12 +7,12 @@ import { CinematicButton } from "@/components/ui/CinematicButton";
 const departments: Department[] = [
   "CSE",
   "ECE",
+  "CSE(AI)",
+  "ER",
+  "CIVIL",
+  "MECH",
   "EEE",
-  "ME",
-  "CE",
-  "AI/DS",
-  "MCA",
-  "Other",
+  "CHEM",
 ];
 
 const years: YearOfStudy[] = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
@@ -35,13 +35,13 @@ export function OnboardingModal({ isOpen, onComplete }: OnboardingModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end bg-cine-black/78 px-3 pb-3 backdrop-blur-sm sm:items-center sm:px-5 sm:pb-5"
+      className="fixed inset-0 z-[60] flex items-end bg-cine-black/78 px-3 pb-4 backdrop-blur-sm sm:items-center sm:px-5 sm:pb-5"
       role="dialog"
       aria-modal="true"
       aria-labelledby="onboarding-title"
     >
       <form
-        className="glass-card red-trace-border mx-auto w-full max-w-lg space-y-5 rounded-t-2xl p-4 shadow-2xl shadow-black/80 safe-bottom sm:rounded-2xl sm:p-6"
+        className="glass-card red-trace-border mx-auto w-full max-w-lg space-y-6 rounded-t-2xl p-5 shadow-2xl shadow-black/80 safe-bottom sm:space-y-5 sm:rounded-2xl sm:p-6"
         onSubmit={(event) => {
           event.preventDefault();
 
@@ -56,7 +56,7 @@ export function OnboardingModal({ isOpen, onComplete }: OnboardingModalProps) {
           });
         }}
       >
-        <div className="space-y-2">
+        <div className="space-y-3 sm:space-y-2">
           <p className="w-fit rounded-full border border-cine-red/40 bg-cine-red/10 px-3 py-1 text-xs font-semibold uppercase text-cine-text-secondary">
             One-time setup
           </p>
@@ -72,7 +72,7 @@ export function OnboardingModal({ isOpen, onComplete }: OnboardingModalProps) {
           </p>
         </div>
 
-        <label className="block space-y-2">
+        <label className="block space-y-3 sm:space-y-2">
           <span className="text-sm font-semibold text-cine-text-primary">
             Name
           </span>
@@ -85,7 +85,7 @@ export function OnboardingModal({ isOpen, onComplete }: OnboardingModalProps) {
           />
         </label>
 
-        <label className="block space-y-2">
+        <label className="block space-y-3 sm:space-y-2">
           <span className="text-sm font-semibold text-cine-text-primary">
             Year of Study
           </span>
@@ -104,7 +104,7 @@ export function OnboardingModal({ isOpen, onComplete }: OnboardingModalProps) {
           </select>
         </label>
 
-        <label className="block space-y-2">
+        <label className="block space-y-3 sm:space-y-2">
           <span className="text-sm font-semibold text-cine-text-primary">
             Department
           </span>
@@ -123,7 +123,11 @@ export function OnboardingModal({ isOpen, onComplete }: OnboardingModalProps) {
           </select>
         </label>
 
-        <CinematicButton className="w-full" type="submit" disabled={!trimmedName}>
+        <CinematicButton
+          className="min-h-12 w-full"
+          type="submit"
+          disabled={!trimmedName}
+        >
           Continue to voting
         </CinematicButton>
       </form>

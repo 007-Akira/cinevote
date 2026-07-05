@@ -2,13 +2,13 @@ import { CinematicButton } from "@/components/ui/CinematicButton";
 
 export function TicketsComingSoon() {
   return (
-    <section className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">
-      <div className="relative w-full max-w-2xl -rotate-1 transition duration-500 hover:rotate-0">
+    <section className="mx-auto flex w-full max-w-4xl flex-col items-center pb-8 text-center sm:pb-0">
+      <div className="relative w-full max-w-2xl transition duration-500 sm:-rotate-1 sm:hover:rotate-0">
         <div
           aria-hidden="true"
           className="absolute inset-0 rounded-xl bg-cine-red/10 blur-3xl"
         />
-        <div className="glass-card red-trace-border relative overflow-hidden rounded-xl px-5 py-10 shadow-red-glow-sm sm:px-10 sm:py-14">
+        <div className="glass-card red-trace-border relative overflow-hidden rounded-xl px-5 py-14 shadow-red-glow-sm sm:px-10 sm:py-14">
           <div
             aria-hidden="true"
             className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgb(255_255_255_/_0.08)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255_/_0.06)_1px,transparent_1px)] [background-size:10px_10px]"
@@ -43,13 +43,13 @@ export function TicketsComingSoon() {
         </div>
       </div>
 
-      <p className="mt-8 max-w-xl text-sm leading-6 text-cine-text-secondary sm:text-base">
+      <p className="mt-10 max-w-xl text-sm leading-7 text-cine-text-secondary sm:mt-8 sm:text-base sm:leading-6">
         Ticket booking will open after the poll result is finalized by the
         organizers. Your screening pass will be available here.
       </p>
 
       <CinematicButton
-        className="mt-6 cursor-not-allowed border-white/10 bg-white/[0.06] text-cine-text-muted shadow-none"
+        className="mt-8 min-h-12 cursor-not-allowed border-white/10 bg-white/[0.06] text-cine-text-muted shadow-none sm:mt-6"
         disabled
         variant="ghost"
       >

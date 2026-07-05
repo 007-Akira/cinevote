@@ -31,7 +31,7 @@ export function VirtualTicket({ ticket }: VirtualTicketProps) {
 
   return (
     <article className="mx-auto w-full max-w-md overflow-hidden rounded-xl border border-cine-red/35 bg-cine-card/80 shadow-red-glow backdrop-blur-2xl">
-      <div className="relative p-5 sm:p-6">
+      <div className="relative p-6 sm:p-6">
         <div
           aria-hidden="true"
           className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgb(229_9_20_/_0.18),transparent_13rem)]"
@@ -45,9 +45,9 @@ export function VirtualTicket({ ticket }: VirtualTicketProps) {
           </span>
         </div>
 
-        <div className="relative mt-5 flex gap-4">
+        <div className="relative mt-7 flex gap-4 sm:mt-5">
           <div
-            className="h-32 w-24 shrink-0 rounded-lg border border-white/10 bg-cover bg-center shadow-xl shadow-black/70"
+            className="h-36 w-24 shrink-0 rounded-lg border border-white/10 bg-cover bg-center shadow-xl shadow-black/70 sm:h-32"
             style={{
               backgroundImage: movie
                 ? `linear-gradient(180deg, transparent 38%, rgb(0 0 0 / 0.78)), url(${movie.posterUrl})`
@@ -68,7 +68,7 @@ export function VirtualTicket({ ticket }: VirtualTicketProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-4 gap-y-5 bg-cine-black/35 px-5 py-5 sm:px-6">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-6 bg-cine-black/35 px-6 py-6 sm:gap-y-5 sm:px-6 sm:py-5">
         <TicketField label="Attendee" value={ticket.studentName} />
         <TicketField label="Status" value={`${ticket.year} | ${ticket.department}`} />
         <TicketField label="Date & Time" value={formatDate(ticket.eventDate)} />
@@ -81,7 +81,7 @@ export function VirtualTicket({ ticket }: VirtualTicketProps) {
         <span className="absolute -right-3 h-6 w-6 rounded-full border border-cine-red/30 bg-background" />
       </div>
 
-      <div className="relative flex flex-col items-center px-5 pb-7 pt-3 text-center sm:px-6">
+      <div className="relative flex flex-col items-center px-6 pb-9 pt-5 text-center sm:px-6 sm:pb-7 sm:pt-3">
         <div
           aria-hidden="true"
           className="absolute top-8 h-32 w-32 rounded-full bg-cine-red/20 blur-3xl"

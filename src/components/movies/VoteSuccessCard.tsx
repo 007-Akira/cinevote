@@ -8,7 +8,7 @@ type VoteSuccessCardProps = {
 
 export function VoteSuccessCard({ movie }: VoteSuccessCardProps) {
   return (
-    <aside className="glass-card red-trace-border mt-6 grid gap-4 rounded-lg p-4 shadow-red-glow-sm sm:grid-cols-[6rem_1fr] sm:items-center">
+    <aside className="glass-card red-trace-border mt-10 grid gap-5 rounded-lg p-5 shadow-red-glow-sm sm:mt-6 sm:grid-cols-[6rem_1fr] sm:items-center sm:gap-4 sm:p-4">
       <div
         className="aspect-[2/3] w-24 rounded-md border border-white/10 bg-cine-card bg-cover bg-center shadow-xl shadow-black/60"
         style={{

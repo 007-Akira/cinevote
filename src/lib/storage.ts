@@ -3,13 +3,26 @@ import type { UserProfile, Vote } from "@/types";
 export const CINEVOTE_DEVICE_ID_KEY = "CINEVOTE_DEVICE_ID";
 export const CINEVOTE_PROFILE_KEY = "CINEVOTE_PROFILE";
 export const CINEVOTE_VOTE_KEY = "CINEVOTE_VOTE";
+const CINEVOTE_STORAGE_VERSION_KEY = "CINEVOTE_STORAGE_VERSION";
+const CINEVOTE_STORAGE_VERSION = "departments-v2";
 
 export function getStoredProfile(): UserProfile | null {
   if (typeof window === "undefined") {
     return null;
   }
 
-  const rawProfile = window.localStorage.getItem(CINEVOTE_PROFILE_KEY);
+  if (!hasCurrentStorageVersion()) {
+    clearVotingStorage();
+    return null;
+  }
+
+  let rawProfile: string | null;
+
+  try {
+    rawProfile = window.localStorage.getItem(CINEVOTE_PROFILE_KEY);
+  } catch {
+    return null;
+  }
 
   if (!rawProfile) {
     return null;
@@ -24,7 +37,15 @@ export function getStoredProfile(): UserProfile | null {
 }
 
 export function saveProfile(profile: UserProfile) {
-  window.localStorage.setItem(CINEVOTE_PROFILE_KEY, JSON.stringify(profile));
+  try {
+    window.localStorage.setItem(
+      CINEVOTE_STORAGE_VERSION_KEY,
+      CINEVOTE_STORAGE_VERSION,
+    );
+    window.localStorage.setItem(CINEVOTE_PROFILE_KEY, JSON.stringify(profile));
+  } catch {
+    // Local storage can be blocked on some mobile/private browser settings.
+  }
 }
 
 export function getStoredDeviceId() {
@@ -32,11 +53,24 @@ export function getStoredDeviceId() {
     return null;
   }
 
-  return window.localStorage.getItem(CINEVOTE_DEVICE_ID_KEY);
+  if (!hasCurrentStorageVersion()) {
+    clearVotingStorage();
+    return null;
+  }
+
+  try {
+    return window.localStorage.getItem(CINEVOTE_DEVICE_ID_KEY);
+  } catch {
+    return null;
+  }
 }
 
 export function saveDeviceId(deviceId: string) {
-  window.localStorage.setItem(CINEVOTE_DEVICE_ID_KEY, deviceId);
+  try {
+    window.localStorage.setItem(CINEVOTE_DEVICE_ID_KEY, deviceId);
+  } catch {
+    // The server also assigns a trusted device cookie for API requests.
+  }
 }
 
 export function getStoredVote(): Vote | null {
@@ -44,7 +78,18 @@ export function getStoredVote(): Vote | null {
     return null;
   }
 
-  const rawVote = window.localStorage.getItem(CINEVOTE_VOTE_KEY);
+  if (!hasCurrentStorageVersion()) {
+    clearVotingStorage();
+    return null;
+  }
+
+  let rawVote: string | null;
+
+  try {
+    rawVote = window.localStorage.getItem(CINEVOTE_VOTE_KEY);
+  } catch {
+    return null;
+  }
 
   if (!rawVote) {
     return null;
@@ -59,5 +104,38 @@ export function getStoredVote(): Vote | null {
 }
 
 export function saveVote(vote: Vote) {
-  window.localStorage.setItem(CINEVOTE_VOTE_KEY, JSON.stringify(vote));
+  try {
+    window.localStorage.setItem(
+      CINEVOTE_STORAGE_VERSION_KEY,
+      CINEVOTE_STORAGE_VERSION,
+    );
+    window.localStorage.setItem(CINEVOTE_VOTE_KEY, JSON.stringify(vote));
+  } catch {
+    // If local storage is unavailable, the API still prevents duplicate votes.
+  }
+}
+
+function hasCurrentStorageVersion() {
+  try {
+    return (
+      window.localStorage.getItem(CINEVOTE_STORAGE_VERSION_KEY) ===
+      CINEVOTE_STORAGE_VERSION
+    );
+  } catch {
+    return false;
+  }
+}
+
+function clearVotingStorage() {
+  try {
+    window.localStorage.removeItem(CINEVOTE_PROFILE_KEY);
+    window.localStorage.removeItem(CINEVOTE_VOTE_KEY);
+    window.localStorage.removeItem(CINEVOTE_DEVICE_ID_KEY);
+    window.localStorage.setItem(
+      CINEVOTE_STORAGE_VERSION_KEY,
+      CINEVOTE_STORAGE_VERSION,
+    );
+  } catch {
+    // Storage is optional; failing closed simply shows onboarding again.
+  }
 }

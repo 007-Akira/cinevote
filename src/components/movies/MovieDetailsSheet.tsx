@@ -22,14 +22,14 @@ export function MovieDetailsSheet({
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-end bg-cine-black/72 px-3 pb-3 backdrop-blur-sm sm:px-5 sm:pb-5"
+      className="fixed inset-0 z-[80] flex items-center bg-cine-black/72 px-3 py-4 backdrop-blur-sm safe-bottom sm:px-5 sm:py-5"
       role="dialog"
       aria-modal="true"
       aria-labelledby="movie-details-title"
       onClick={onClose}
     >
       <section
-        className="glass-card red-trace-border relative mx-auto max-h-[90dvh] w-full max-w-3xl overflow-hidden rounded-t-2xl shadow-2xl shadow-black/80 sm:rounded-2xl"
+        className="glass-card red-trace-border relative mx-auto max-h-[calc(100dvh-2rem)] w-full max-w-3xl overflow-y-auto rounded-2xl shadow-2xl shadow-black/80 sm:max-h-[calc(100dvh-2.5rem)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div
@@ -47,7 +47,7 @@ export function MovieDetailsSheet({
           </button>
         </div>
 
-        <div className="relative z-10 -mt-16 max-h-[calc(90dvh-6rem)] overflow-y-auto px-4 pb-5 safe-bottom sm:px-6">
+        <div className="relative z-10 -mt-16 px-4 pb-5 safe-bottom sm:px-6">
           <div className="grid gap-5 sm:grid-cols-[9rem_1fr] sm:items-end">
             <div
               className="relative z-10 aspect-[2/3] w-32 rounded-lg border border-white/15 bg-cine-card bg-cover bg-center shadow-2xl shadow-black/70 sm:w-36"

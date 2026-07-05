@@ -77,7 +77,7 @@ export function PollCountdown() {
 
   return (
     <section
-      className="relative mx-auto flex w-full max-w-6xl flex-col items-center justify-center overflow-hidden px-4 pb-10 pt-16 sm:px-6 sm:pb-12 sm:pt-20"
+      className="relative mx-auto flex w-full max-w-6xl flex-col items-center justify-center overflow-hidden px-4 pb-20 pt-24 sm:px-6 sm:pb-12 sm:pt-20"
       id="PollCountdown"
     >
       <div
@@ -86,8 +86,8 @@ export function PollCountdown() {
       />
 
       <div className="relative z-10 flex w-full max-w-4xl flex-col items-center">
-        <div className="mb-6 flex flex-col items-center">
-          <div className="mb-4 flex items-center gap-2">
+        <div className="mb-8 flex flex-col items-center sm:mb-6">
+          <div className="mb-5 flex items-center gap-2 sm:mb-4">
             <span className="h-px w-8 bg-cine-red" />
             <span className="text-xs font-semibold uppercase tracking-[0.3em] text-cine-red">
               {countdownState.statusLabel}
@@ -105,7 +105,7 @@ export function PollCountdown() {
         />
 
         {countdownState.timeRemaining ? (
-          <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid w-full grid-cols-2 gap-5 sm:grid-cols-4 sm:gap-4">
             <TimeBox
               value={countdownState.timeRemaining.days}
               label="Days"
@@ -128,7 +128,7 @@ export function PollCountdown() {
             />
           </div>
         ) : (
-          <div className="relative w-full overflow-hidden border border-cine-red/25 bg-cine-card/70 px-4 py-7 text-center shadow-[0_0_36px_rgb(229_9_20_/_0.16)] backdrop-blur-xl">
+          <div className="relative w-full overflow-hidden border border-cine-red/25 bg-cine-card/70 px-4 py-9 text-center shadow-[0_0_36px_rgb(229_9_20_/_0.16)] backdrop-blur-xl sm:py-7">
             <div
               aria-hidden="true"
               className="absolute inset-x-0 top-0 h-px animate-[hud-scan_4s_linear_infinite] bg-gradient-to-r from-transparent via-cine-red to-transparent opacity-30"

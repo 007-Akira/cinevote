@@ -16,12 +16,12 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server";
 const departments = [
   "CSE",
   "ECE",
+  "CSE(AI)",
+  "ER",
+  "CIVIL",
+  "MECH",
   "EEE",
-  "ME",
-  "CE",
-  "AI/DS",
-  "MCA",
-  "Other",
+  "CHEM",
 ] as const;
 
 const years = ["1st Year", "2nd Year", "3rd Year", "4th Year"] as const;
@@ -279,21 +279,13 @@ export async function POST(request: NextRequest) {
   }
 
   const suspiciousReason = await getSuspiciousProfileReason(supabase, body);
-  const { data: voter, error: voterError } = await supabase
-    .from("voters")
-    .upsert(
-      {
-        device_id: trustedDevice.deviceId,
-        name: body.profile.name,
-        year_of_study: body.profile.year,
-        department: body.profile.department,
-        ip_hash: attemptContext.ipHash,
-        user_agent_hash: attemptContext.userAgentHash,
-      },
-      { onConflict: "device_id" },
-    )
-    .select("id")
-    .single();
+  const { data: voter, error: voterError } = await upsertVoterProfile({
+    supabase,
+    deviceId: trustedDevice.deviceId,
+    profile: body.profile,
+    ipHash: attemptContext.ipHash,
+    userAgentHash: attemptContext.userAgentHash,
+  });
 
   if (voterError || !voter) {
     console.error("Voter upsert failed:", {
@@ -440,7 +432,15 @@ function isAllowedOrigin(request: NextRequest) {
   if (process.env.NODE_ENV !== "production") {
     try {
       const originUrl = new URL(origin);
-      if (originUrl.hostname === "localhost" || originUrl.hostname === "127.0.0.1") {
+      const requestHostname = request.headers.get("host")?.split(":")[0];
+
+      if (
+        originUrl.hostname === "localhost" ||
+        originUrl.hostname === "127.0.0.1" ||
+        originUrl.hostname === request.nextUrl.hostname ||
+        originUrl.hostname === requestHostname ||
+        isPrivateIpv4(originUrl.hostname)
+      ) {
         return true;
       }
     } catch {
@@ -449,6 +449,25 @@ function isAllowedOrigin(request: NextRequest) {
   }
 
   return allowedOrigins.has(origin);
+}
+
+function isPrivateIpv4(hostname: string) {
+  const parts = hostname.split(".").map((part) => Number(part));
+
+  if (
+    parts.length !== 4 ||
+    parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)
+  ) {
+    return false;
+  }
+
+  const [first, second] = parts;
+
+  return (
+    first === 10 ||
+    (first === 172 && second >= 16 && second <= 31) ||
+    (first === 192 && second === 168)
+  );
 }
 
 async function getRateLimitStatus(
@@ -534,6 +553,58 @@ async function getSuspiciousProfileReason(
   }
 
   return (count ?? 0) > 0 ? "suspicious_duplicate_profile" : null;
+}
+
+async function upsertVoterProfile({
+  supabase,
+  deviceId,
+  profile,
+  ipHash,
+  userAgentHash,
+}: {
+  supabase: ReturnType<typeof createSupabaseAdminClient>;
+  deviceId: string;
+  profile: VoteRequestBody["profile"];
+  ipHash: string;
+  userAgentHash: string | null;
+}) {
+  const firstAttempt = await supabase
+    .from("voters")
+    .upsert(
+      {
+        device_id: deviceId,
+        name: profile.name,
+        year_of_study: profile.year,
+        department: profile.department,
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash,
+      },
+      { onConflict: "device_id" },
+    )
+    .select("id")
+    .single<{ id: string }>();
+
+  if (!isMissingSchemaColumn(firstAttempt.error)) {
+    return firstAttempt;
+  }
+
+  console.error("Voter hash columns are unavailable, retrying core upsert:", {
+    error: firstAttempt.error,
+  });
+
+  return supabase
+    .from("voters")
+    .upsert(
+      {
+        device_id: deviceId,
+        name: profile.name,
+        year_of_study: profile.year,
+        department: profile.department,
+      },
+      { onConflict: "device_id" },
+    )
+    .select("id")
+    .single<{ id: string }>();
 }
 
 async function getExistingVote(
@@ -651,10 +722,14 @@ function getPollGateError({
     };
   }
 
+  if (!pollStartsAt && !pollClosesAt) {
+    return null;
+  }
+
   if (!pollStartsAt || !pollClosesAt) {
     return {
       status: "schedule_missing" as const,
-      reason: "missing_schedule",
+      reason: "partial_schedule",
       message: "Poll schedule is not configured",
     };
   }

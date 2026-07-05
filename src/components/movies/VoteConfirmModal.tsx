@@ -24,17 +24,17 @@ export function VoteConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-end bg-cine-black/78 px-3 pb-3 backdrop-blur-sm sm:items-center sm:px-5 sm:pb-5"
+      className="fixed inset-0 z-[120] flex items-end bg-cine-black/78 px-3 pb-4 backdrop-blur-sm sm:items-center sm:px-5 sm:pb-5"
       role="dialog"
       aria-modal="true"
       aria-labelledby="vote-confirm-title"
       onClick={onCancel}
     >
       <section
-        className="glass-card red-trace-border mx-auto w-full max-w-lg space-y-5 rounded-t-2xl p-4 shadow-2xl shadow-black/80 safe-bottom sm:rounded-2xl sm:p-6"
+        className="glass-card red-trace-border mx-auto w-full max-w-lg space-y-6 rounded-t-2xl p-5 shadow-2xl shadow-black/80 safe-bottom sm:space-y-5 sm:rounded-2xl sm:p-6"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="space-y-2">
+        <div className="space-y-3 sm:space-y-2">
           <p className="w-fit rounded-full border border-cine-red/40 bg-cine-red/10 px-3 py-1 text-xs font-semibold uppercase text-cine-text-secondary">
             Final check
           </p>
@@ -54,7 +54,7 @@ export function VoteConfirmModal({
           </p>
         ) : null}
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 sm:gap-3">
           <CinematicButton
             className="w-full"
             disabled={isSubmitting}
@@ -78,7 +78,7 @@ export function VoteConfirmModal({
 
 function MovieVotePreview({ movie }: { movie: Movie }) {
   return (
-    <div className="grid grid-cols-[5rem_1fr] gap-4 rounded-lg border border-white/10 bg-cine-elevated/70 p-3">
+    <div className="grid grid-cols-[5rem_1fr] gap-5 rounded-lg border border-white/10 bg-cine-elevated/70 p-4 sm:gap-4 sm:p-3">
       <div
         className="aspect-[2/3] rounded-md border border-white/10 bg-cine-card bg-cover bg-center"
         style={{

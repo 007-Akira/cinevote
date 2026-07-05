@@ -30,7 +30,7 @@ export function MovieCard({
       tabIndex={0}
       onClick={() => onDetails(movie)}
       onKeyDown={handleKeyDown}
-      className="group glass-card red-trace-border grid cursor-pointer grid-cols-[6.5rem_1fr] gap-4 rounded-lg p-3 transition hover:-translate-y-0.5 hover:border-cine-red/60 hover:shadow-red-glow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cine-red sm:grid-cols-1 sm:p-4"
+      className="group glass-card red-trace-border grid cursor-pointer grid-cols-[6.5rem_1fr] gap-5 rounded-lg p-4 transition hover:-translate-y-0.5 hover:border-cine-red/60 hover:shadow-red-glow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cine-red sm:grid-cols-1 sm:gap-4 sm:p-4"
       aria-label={`Open details for ${movie.title}`}
     >
       <div
@@ -49,8 +49,8 @@ export function MovieCard({
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-col justify-between gap-4">
-        <div className="min-w-0 space-y-2">
+      <div className="flex min-w-0 flex-col justify-between gap-5 sm:gap-4">
+        <div className="min-w-0 space-y-3 sm:space-y-2">
           <div className="hidden items-start justify-between gap-3 sm:flex">
             <h2 className="font-anton text-4xl leading-none text-cine-text-primary">
               {movie.title}
@@ -71,7 +71,7 @@ export function MovieCard({
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3 sm:gap-2">
           <CinematicButton
             variant="ghost"
             className="min-h-10 px-3 text-xs"

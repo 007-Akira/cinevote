@@ -28,12 +28,12 @@ type TicketStatusPayload = {
 const departments: Department[] = [
   "CSE",
   "ECE",
+  "CSE(AI)",
+  "ER",
+  "CIVIL",
+  "MECH",
   "EEE",
-  "ME",
-  "CE",
-  "AI/DS",
-  "MCA",
-  "Other",
+  "CHEM",
 ];
 
 const years: YearOfStudy[] = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
@@ -156,7 +156,7 @@ export function TicketBookingPanel() {
 
   if (isLoading) {
     return (
-      <div className="glass-card red-trace-border rounded-xl p-5 text-sm font-semibold text-cine-text-secondary">
+      <div className="glass-card red-trace-border rounded-xl p-6 text-sm font-semibold text-cine-text-secondary sm:p-5">
         Loading ticket status...
       </div>
     );
@@ -183,17 +183,17 @@ export function TicketBookingPanel() {
   );
 
   return (
-    <section className="mx-auto grid w-full max-w-5xl gap-5 lg:grid-cols-[1fr_0.85fr] lg:items-start">
+    <section className="mx-auto grid w-full max-w-5xl gap-7 pb-8 sm:gap-5 sm:pb-0 lg:grid-cols-[1fr_0.85fr] lg:items-start">
       <article className="glass-card red-trace-border overflow-hidden rounded-xl">
         <div className="grid md:grid-cols-[15rem_1fr]">
           <div
-            className="min-h-80 bg-cover bg-center md:min-h-full"
+            className="min-h-[24rem] bg-cover bg-center sm:min-h-80 md:min-h-full"
             style={{
               backgroundImage: `linear-gradient(180deg, transparent 35%, rgb(0 0 0 / 0.82)), url(${ticketStatus.winningMovie.posterUrl})`,
             }}
             aria-label={`${ticketStatus.winningMovie.title} poster`}
           />
-          <div className="p-5 sm:p-6">
+          <div className="p-6 sm:p-6">
             <p className="w-fit rounded-full border border-cine-red/40 bg-cine-red/10 px-3 py-1 text-xs font-semibold uppercase text-cine-text-secondary">
               Screening pass
             </p>
@@ -201,7 +201,7 @@ export function TicketBookingPanel() {
               {ticketStatus.winningMovie.title}
             </h1>
 
-            <dl className="mt-6 grid gap-3 text-sm text-cine-text-primary">
+            <dl className="mt-7 grid gap-4 text-sm text-cine-text-primary sm:mt-6 sm:gap-3">
               <InfoRow label="Date & Time" value={formatDate(ticketStatus.eventDate)} />
               <InfoRow label="Venue" value={ticketStatus.venue ?? "Venue pending"} />
               <InfoRow
@@ -213,8 +213,8 @@ export function TicketBookingPanel() {
         </div>
       </article>
 
-      <div className="space-y-5">
-        <section className="glass-card red-trace-border rounded-xl p-5 sm:p-6">
+      <div className="space-y-7 sm:space-y-5">
+        <section className="glass-card red-trace-border rounded-xl p-6 sm:p-6">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase text-cine-text-muted">
@@ -231,7 +231,7 @@ export function TicketBookingPanel() {
               {ticketStatus.bookedTickets} booked
             </p>
           </div>
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+          <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10 sm:mt-4">
             <div
               className="h-full rounded-full bg-cine-red shadow-red-glow-sm"
               style={{ width: `${remainingPercent}%` }}
@@ -240,7 +240,7 @@ export function TicketBookingPanel() {
         </section>
 
         <form
-          className="glass-card red-trace-border rounded-xl p-5 sm:p-6"
+          className="glass-card red-trace-border rounded-xl p-6 sm:p-6"
           onSubmit={(formEvent) => {
             formEvent.preventDefault();
             void handleGenerateTicket();
@@ -267,7 +267,7 @@ export function TicketBookingPanel() {
           </div>
 
           {!activeProfile ? (
-            <div className="mt-5 grid gap-4">
+            <div className="mt-6 grid gap-5 sm:mt-5 sm:gap-4">
               <label className="block space-y-2">
                 <span className="text-sm font-semibold text-cine-text-primary">
                   Name
@@ -330,7 +330,7 @@ export function TicketBookingPanel() {
           ) : null}
 
           <CinematicButton
-            className="mt-6 w-full"
+            className="mt-7 min-h-12 w-full sm:mt-6"
             type="submit"
             disabled={isBooking || (!activeProfile && !trimmedName)}
           >

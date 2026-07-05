@@ -86,17 +86,17 @@ export default function LiveVotingPage() {
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_0%,rgb(229_9_20_/_0.2),transparent_24rem),radial-gradient(circle_at_100%_28%,rgb(233_188_182_/_0.08),transparent_20rem)]"
       />
 
-      <section className="mx-auto w-full max-w-6xl px-4 py-7 sm:px-6 sm:py-10">
-        <div className="space-y-3">
+      <section className="mx-auto w-full max-w-6xl px-4 py-11 sm:px-6 sm:py-10">
+        <div className="space-y-5 sm:space-y-3">
           <p className="w-fit rounded-full border border-cine-red/40 bg-cine-red/10 px-3 py-1 text-xs font-semibold uppercase text-cine-text-secondary">
             Live voting
           </p>
-          <div className="grid gap-4 lg:grid-cols-[1fr_22rem] lg:items-end">
+          <div className="grid gap-6 sm:gap-4 lg:grid-cols-[1fr_22rem] lg:items-end">
             <div>
               <h1 className="font-anton text-5xl leading-none text-cine-text-primary sm:text-7xl">
                 Current Standings
               </h1>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-cine-text-secondary sm:text-base">
+              <p className="mt-3 max-w-xl text-sm leading-7 text-cine-text-secondary sm:mt-2 sm:text-base sm:leading-6">
                 Follow the screening race as votes come in. Your vote is
                 highlighted on this browser after it is recorded.
               </p>
@@ -118,7 +118,7 @@ export default function LiveVotingPage() {
           </div>
         </div>
 
-        <div className="mt-7 grid gap-4">
+        <div className="mt-10 grid gap-6 sm:mt-7 sm:gap-4">
           {isLoadingResults ? (
             <div className="glass-card red-trace-border rounded-lg p-4 text-sm text-cine-text-secondary">
               Loading live results...
@@ -137,7 +137,7 @@ export default function LiveVotingPage() {
             return (
               <article
                 key={result.movie.id}
-                className="glass-card red-trace-border grid gap-4 rounded-lg p-4 sm:grid-cols-[5rem_1fr_auto] sm:items-center"
+                className="glass-card red-trace-border grid gap-5 rounded-lg p-5 sm:grid-cols-[5rem_1fr_auto] sm:items-center sm:gap-4 sm:p-4"
               >
                 <div
                   className="aspect-[2/3] w-20 rounded-md border border-white/10 bg-cine-card bg-cover bg-center shadow-xl shadow-black/60"

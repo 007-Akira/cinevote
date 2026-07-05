@@ -6,7 +6,7 @@ import { FilmGrain } from "@/components/layout/FilmGrain";
 
 export default function Home() {
   return (
-    <main className="relative min-h-dvh overflow-hidden safe-bottom-lg">
+    <main className="relative min-h-dvh overflow-x-hidden safe-bottom-lg">
       <CineVoteIntro />
       <FilmGrain />
       <a
@@ -25,12 +25,13 @@ export default function Home() {
       <HeroSection />
 
       <CinematicMarquee
+        className="mb-10 mt-2 sm:my-0"
         items={["CHOOSE THE MOVIE", "OWN THE NIGHT", "VOTE NOW"]}
       />
 
       <PollCountdown />
 
-      <footer className="mx-auto w-full max-w-6xl px-4 py-7 text-center text-sm font-medium text-cine-text-muted sm:px-6">
+      <footer className="mx-auto w-full max-w-6xl px-4 py-14 text-center text-sm font-medium text-cine-text-muted sm:px-6 sm:py-7">
         Built for students. Decided by students.
       </footer>
     </main>

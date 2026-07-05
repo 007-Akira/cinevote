@@ -23,12 +23,11 @@ import { getWinningMovie } from "@/lib/winning-movie";
 const departments = [
   "CSE",
   "ECE",
+  "CSE(AI)",
+  "ER",
+  "CIVIL",
+  "MECH",
   "EEE",
-  "ME",
-  "CE",
-  "AI/DS",
-  "MCA",
-  "Other",
 ] as const;
 
 const years = ["1st Year", "2nd Year", "3rd Year", "4th Year"] as const;
