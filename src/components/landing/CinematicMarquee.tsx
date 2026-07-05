@@ -13,20 +13,21 @@ export function CinematicMarquee({
   items = defaultItems,
   className = "",
 }: CinematicMarqueeProps) {
-  const loopItems = [...items, ...items];
+  const trackItems = Array.from({ length: 8 }, () => items).flat();
+  const loopItems = [...trackItems, ...trackItems];
 
   return (
     <div
-      className={`relative overflow-hidden border-y border-cine-red/30 bg-cine-black/55 py-3 text-cine-text-secondary shadow-[0_0_40px_rgb(229_9_20_/_0.12)] ${className}`}
+      className={`relative z-20 -mx-6 w-[calc(100%+3rem)] -rotate-[3deg] origin-center overflow-hidden border-y border-cine-red/60 bg-cine-black/88 py-3 text-cine-text-primary shadow-[0_0_34px_rgb(229_9_20_/_0.26)] backdrop-blur-md ${className}`}
     >
-      <div className="flex w-max animate-[cine-marquee_20s_linear_infinite] gap-5 whitespace-nowrap px-4">
+      <div className="flex w-max animate-[cine-marquee_28s_linear_infinite] whitespace-nowrap">
         {loopItems.map((item, index) => (
           <span
             key={`${item}-${index}`}
-            className="font-anton text-lg uppercase tracking-normal sm:text-xl"
+            className="flex shrink-0 items-center pl-7 font-anton text-lg uppercase tracking-normal sm:pl-10 sm:text-xl"
           >
             {item}
-            <span className="ml-5 text-cine-red">•</span>
+            <span className="ml-7 text-cine-red sm:ml-10">•</span>
           </span>
         ))}
       </div>

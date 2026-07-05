@@ -13,6 +13,7 @@ const defaultNavItems: NavItem[] = [
   { href: "/", label: "Home" },
   { href: "/movies", label: "Movies" },
   { href: "/live", label: "Live" },
+  { href: "/tickets", label: "Tickets" },
   { href: "/admin", label: "Admin" },
 ];
 

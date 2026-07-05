@@ -14,9 +14,6 @@ export function HeroSection() {
             <span className="rounded-full border border-cine-red/40 bg-cine-red/10 px-3 py-1 text-xs font-semibold uppercase text-cine-text-secondary">
               College Movie Screening
             </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase text-cine-text-muted">
-              Coming Soon
-            </span>
           </div>
         </div>
 

@@ -24,7 +24,7 @@ export function VoteConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-[55] flex items-end bg-cine-black/78 px-3 pb-3 backdrop-blur-sm sm:items-center sm:px-5 sm:pb-5"
+      className="fixed inset-0 z-[120] flex items-end bg-cine-black/78 px-3 pb-3 backdrop-blur-sm sm:items-center sm:px-5 sm:pb-5"
       role="dialog"
       aria-modal="true"
       aria-labelledby="vote-confirm-title"

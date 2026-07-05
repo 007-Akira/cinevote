@@ -127,3 +127,13 @@ a {
     transform: translateX(-50%);
   }
 }
+
+@keyframes hud-scan {
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(400%);
+  }
+}

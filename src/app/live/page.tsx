@@ -1,43 +1,79 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { movies } from "@/data/movies";
-import type { Vote } from "@/types";
+import { useEffect, useState } from "react";
+import type { Movie, Vote } from "@/types";
 import { FilmGrain } from "@/components/layout/FilmGrain";
 import { TopBar } from "@/components/layout/TopBar";
 import { CinematicButton } from "@/components/ui/CinematicButton";
 import { getStoredVote } from "@/lib/storage";
 
-const baseVotes: Record<string, number> = {
-  "movie-1": 42,
-  "movie-2": 38,
-  "movie-3": 31,
-  "movie-4": 35,
+type LiveResult = {
+  movie: Movie;
+  votes: number;
+  percent: number;
+};
+
+type ResultsResponse = {
+  totalVotes?: number;
+  results?: LiveResult[];
+  error?: string;
 };
 
 export default function LiveVotingPage() {
   const [storedVote, setStoredVote] = useState<Vote | null>(null);
+  const [results, setResults] = useState<LiveResult[]>([]);
+  const [totalVotes, setTotalVotes] = useState(0);
+  const [isLoadingResults, setIsLoadingResults] = useState(true);
+  const [resultsError, setResultsError] = useState<string | null>(null);
 
   useEffect(() => {
-    queueMicrotask(() => {
+    let shouldIgnore = false;
+
+    async function loadResults(showLoading = false) {
+      if (showLoading) {
+        setIsLoadingResults(true);
+      }
+
+      setResultsError(null);
       setStoredVote(getStoredVote());
-    });
+
+      try {
+        const response = await fetch("/api/results", { cache: "no-store" });
+        const payload = (await response.json()) as ResultsResponse;
+
+        if (shouldIgnore) {
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(payload.error ?? "Could not load live results.");
+        }
+
+        setResults(payload.results ?? []);
+        setTotalVotes(payload.totalVotes ?? 0);
+      } catch (error) {
+        if (!shouldIgnore) {
+          setResultsError(
+            error instanceof Error ? error.message : "Could not load live results.",
+          );
+        }
+      } finally {
+        if (!shouldIgnore && showLoading) {
+          setIsLoadingResults(false);
+        }
+      }
+    }
+
+    void loadResults(true);
+    const refreshTimer = window.setInterval(() => {
+      void loadResults();
+    }, 10000);
+
+    return () => {
+      shouldIgnore = true;
+      window.clearInterval(refreshTimer);
+    };
   }, []);
-
-  const results = useMemo(() => {
-    const totals = movies.map((movie) => ({
-      movie,
-      votes: baseVotes[movie.id] + (storedVote?.movieId === movie.id ? 1 : 0),
-    }));
-    const totalVotes = totals.reduce((sum, result) => sum + result.votes, 0);
-
-    return totals
-      .map((result) => ({
-        ...result,
-        percent: totalVotes ? Math.round((result.votes / totalVotes) * 100) : 0,
-      }))
-      .sort((a, b) => b.votes - a.votes);
-  }, [storedVote]);
 
   const leadingMovie = results[0]?.movie;
 
@@ -61,8 +97,8 @@ export default function LiveVotingPage() {
                 Current Standings
               </h1>
               <p className="mt-2 max-w-xl text-sm leading-6 text-cine-text-secondary sm:text-base">
-                Follow the screening race as votes come in. Your browser vote is
-                highlighted locally until the backend is connected.
+                Follow the screening race as votes come in. Your vote is
+                highlighted on this browser after it is recorded.
               </p>
             </div>
 
@@ -74,12 +110,27 @@ export default function LiveVotingPage() {
                 <p className="mt-2 font-anton text-4xl leading-none text-cine-text-primary">
                   {leadingMovie.title}
                 </p>
+                <p className="mt-1 text-sm text-cine-text-muted">
+                  {totalVotes} total votes
+                </p>
               </div>
             ) : null}
           </div>
         </div>
 
         <div className="mt-7 grid gap-4">
+          {isLoadingResults ? (
+            <div className="glass-card red-trace-border rounded-lg p-4 text-sm text-cine-text-secondary">
+              Loading live results...
+            </div>
+          ) : null}
+
+          {resultsError ? (
+            <div className="glass-card red-trace-border rounded-lg p-4 text-sm text-cine-text-secondary">
+              {resultsError}
+            </div>
+          ) : null}
+
           {results.map((result, index) => {
             const isYourVote = storedVote?.movieId === result.movie.id;
 

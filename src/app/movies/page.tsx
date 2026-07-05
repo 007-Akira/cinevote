@@ -18,6 +18,8 @@ import {
   saveVote,
 } from "@/lib/storage";
 
+const ALREADY_VOTED_MESSAGE = "You have already voted.";
+
 export default function MoviesPage() {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [pendingVoteMovie, setPendingVoteMovie] = useState<Movie | null>(null);
@@ -39,7 +41,7 @@ export default function MoviesPage() {
 
       if (existingVote) {
         setStoredVote(existingVote);
-        setVoteMessage("You have already voted from this browser.");
+        setVoteMessage(ALREADY_VOTED_MESSAGE);
       }
 
       if (storedProfile) {
@@ -53,7 +55,7 @@ export default function MoviesPage() {
 
   function handleVote(movie: Movie) {
     if (storedVote) {
-      setVoteMessage("You have already voted from this browser.");
+      setVoteMessage(ALREADY_VOTED_MESSAGE);
       return;
     }
 
@@ -64,6 +66,7 @@ export default function MoviesPage() {
     }
 
     setPendingVoteMovie(movie);
+    setSelectedMovie(null);
     setVoteError(null);
   }
 
@@ -77,7 +80,7 @@ export default function MoviesPage() {
   async function handleConfirmVote(movie: Movie) {
     if (storedVote) {
       setPendingVoteMovie(null);
-      setVoteMessage("You have already voted from this browser.");
+      setVoteMessage(ALREADY_VOTED_MESSAGE);
       return;
     }
 
@@ -110,6 +113,12 @@ export default function MoviesPage() {
 
       const result = (await response.json()) as {
         error?: string;
+        supabase?: {
+          code?: string;
+          message?: string;
+          details?: string;
+          hint?: string;
+        } | null;
         vote?: Vote;
         movie?: Movie | null;
       };
@@ -137,11 +146,11 @@ export default function MoviesPage() {
         }
 
         setPendingVoteMovie(null);
-        setVoteMessage("You have already voted from this browser.");
+        setVoteMessage(ALREADY_VOTED_MESSAGE);
         return;
       }
 
-      setVoteError(result.error ?? "Could not record your vote. Try again.");
+      setVoteError(formatVoteError(result));
     } catch {
       setVoteError("Could not reach the voting server. Try again.");
     } finally {
@@ -233,4 +242,20 @@ export default function MoviesPage() {
       />
     </main>
   );
+}
+
+function formatVoteError(result: {
+  error?: string;
+  supabase?: {
+    code?: string;
+    message?: string;
+    details?: string;
+    hint?: string;
+  } | null;
+}) {
+  const message =
+    result.supabase?.message ?? result.error ?? "Could not record your vote.";
+  const hint = result.supabase?.hint ?? result.supabase?.details;
+
+  return hint ? `${message} ${hint}` : message;
 }
