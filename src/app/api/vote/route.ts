@@ -1,8 +1,19 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import {
+  DEVICE_COOKIE_NAME,
+  getDeviceCookieOptions,
+  getOrCreateTrustedDeviceId,
+} from "@/lib/device-cookie";
 import { hashRequestSignal } from "@/lib/hash";
+import {
+  getActiveMovieById,
+  mapMovieRow,
+  movieSelect,
+} from "@/lib/supabase/movies";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
-const departments = new Set([
+const departments = [
   "CSE",
   "ECE",
   "EEE",
@@ -11,110 +22,273 @@ const departments = new Set([
   "AI/DS",
   "MCA",
   "Other",
-]);
+] as const;
 
-const years = new Set(["1st Year", "2nd Year", "3rd Year", "4th Year"]);
+const years = ["1st Year", "2nd Year", "3rd Year", "4th Year"] as const;
 
-type VoteRequestBody = {
-  deviceId?: unknown;
-  movieId?: unknown;
-  profile?: {
-    name?: unknown;
-    year?: unknown;
-    department?: unknown;
-  };
-};
+const voteRequestSchema = z
+  .object({
+    deviceId: z.string().trim().optional(),
+    movieId: z.string().trim().min(1, "movieId is required."),
+    profile: z
+      .object({
+        name: z.string().trim().min(2).max(80),
+        year: z.enum(years),
+        department: z.enum(departments),
+      })
+      .strict(),
+  })
+  .strict();
+
+type VoteRequestBody = z.infer<typeof voteRequestSchema>;
 
 type SupabaseError = {
   code?: string;
   message?: string;
+  details?: string;
+  hint?: string;
+};
+
+type AttemptStatus =
+  | "success"
+  | "invalid_payload"
+  | "invalid_movie"
+  | "duplicate_vote"
+  | "poll_closed"
+  | "poll_not_started"
+  | "schedule_missing"
+  | "rate_limited"
+  | "server_error";
+
+type AttemptContext = {
+  ipHash: string;
+  userAgentHash: string | null;
+  deviceId: string;
+  movieId?: string | null;
 };
 
 export async function POST(request: NextRequest) {
-  let body: VoteRequestBody;
+  let trustedDevice: ReturnType<typeof getOrCreateTrustedDeviceId>;
 
   try {
-    body = (await request.json()) as VoteRequestBody;
-  } catch {
-    return Response.json({ error: "Invalid JSON body." }, { status: 400 });
+    trustedDevice = getOrCreateTrustedDeviceId(request);
+  } catch (error) {
+    console.error("Device cookie setup failed:", error);
+    return Response.json({ error: "Could not verify device." }, { status: 500 });
   }
 
-  const validationError = validateVoteRequest(body);
-
-  if (validationError) {
-    return Response.json({ error: validationError }, { status: 400 });
-  }
-
-  const deviceId = body.deviceId as string;
-  const movieId = body.movieId as string;
-  const profile = body.profile as {
-    name: string;
-    year: string;
-    department: string;
+  const ipAddress =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown-ip";
+  const userAgent = request.headers.get("user-agent");
+  const attemptContext: AttemptContext = {
+    ipHash: hashRequestSignal(ipAddress) ?? hashRequestSignal("unknown-ip")!,
+    userAgentHash: hashRequestSignal(userAgent),
+    deviceId: trustedDevice.deviceId,
   };
 
-  const supabase = createSupabaseAdminClient();
+  let supabase: ReturnType<typeof createSupabaseAdminClient>;
 
-  const { data: pollSettings, error: pollSettingsError } = await supabase
-    .from("poll_settings")
-    .select("is_voting_open")
-    .eq("id", "main")
-    .single();
+  try {
+    supabase = createSupabaseAdminClient();
+  } catch (error) {
+    console.error("Supabase admin client error:", error);
 
-  if (pollSettingsError || !pollSettings) {
-    return Response.json(
-      { error: "Poll settings are not configured." },
+    return jsonWithDeviceCookie(
+      request,
+      { error: "Voting is not configured." },
       { status: 500 },
+      trustedDevice.cookieValue,
     );
   }
 
-  if (!pollSettings.is_voting_open) {
-    return Response.json({ error: "Poll is closed." }, { status: 403 });
+  if (!isAllowedOrigin(request)) {
+    await logVoteAttempt(supabase, {
+      ...attemptContext,
+      status: "invalid_payload",
+      reason: "origin_blocked",
+    });
+
+    return jsonWithDeviceCookie(
+      request,
+      { error: "Request origin is not allowed." },
+      { status: 403 },
+      trustedDevice.cookieValue,
+    );
   }
 
-  const { data: movie, error: movieError } = await supabase
-    .from("movies")
-    .select(
-      "id,title,language,genre,runtime,rating,hook,summary,why_screen,poster_url,backdrop_url",
-    )
-    .eq("id", movieId)
-    .eq("is_active", true)
-    .single();
+  const rateLimit = await getRateLimitStatus(supabase, attemptContext);
+
+  if (rateLimit.isLimited) {
+    await logVoteAttempt(supabase, {
+      ...attemptContext,
+      status: "rate_limited",
+      reason: rateLimit.reason,
+    });
+
+    return jsonWithDeviceCookie(
+      request,
+      { error: "Too many attempts. Please try again later." },
+      { status: 429 },
+      trustedDevice.cookieValue,
+    );
+  }
+
+  let rawBody: unknown;
+
+  try {
+    rawBody = await request.json();
+  } catch {
+    await logVoteAttempt(supabase, {
+      ...attemptContext,
+      status: "invalid_payload",
+      reason: "invalid_json",
+    });
+
+    return jsonWithDeviceCookie(
+      request,
+      { error: "Invalid JSON body." },
+      { status: 400 },
+      trustedDevice.cookieValue,
+    );
+  }
+
+  const parsedBody = voteRequestSchema.safeParse(rawBody);
+
+  if (!parsedBody.success) {
+    await logVoteAttempt(supabase, {
+      ...attemptContext,
+      status: "invalid_payload",
+      reason: "validation_failed",
+    });
+
+    return jsonWithDeviceCookie(
+      request,
+      { error: "Invalid vote request." },
+      { status: 400 },
+      trustedDevice.cookieValue,
+    );
+  }
+
+  const body = parsedBody.data;
+  attemptContext.movieId = body.movieId;
+
+  const pollSettings = await getPollSettings(supabase);
+
+  if (pollSettings.error || !pollSettings.data) {
+    console.error("Poll settings lookup failed:", pollSettings.error);
+    await logVoteAttempt(supabase, {
+      ...attemptContext,
+      status: "server_error",
+      reason: "poll_settings_lookup_failed",
+    });
+
+    return jsonWithDeviceCookie(
+      request,
+      { error: "Voting is not configured." },
+      { status: 500 },
+      trustedDevice.cookieValue,
+    );
+  }
+
+  const pollGate = getPollGateError({
+    isOpen: pollSettings.data.is_open,
+    pollStartsAt: pollSettings.data.poll_starts_at,
+    pollClosesAt: pollSettings.data.poll_closes_at,
+    now: new Date(),
+  });
+
+  if (pollGate) {
+    await logVoteAttempt(supabase, {
+      ...attemptContext,
+      status: pollGate.status,
+      reason: pollGate.reason,
+    });
+
+    return jsonWithDeviceCookie(
+      request,
+      { error: pollGate.message },
+      { status: 403 },
+      trustedDevice.cookieValue,
+    );
+  }
+
+  const { movie, error: movieError, seedError } = await getActiveMovieById(
+    supabase,
+    body.movieId,
+  );
+
+  if (seedError) {
+    console.error("Movie catalog seed failed during vote:", {
+      movieId: body.movieId,
+      seedError,
+    });
+    await logVoteAttempt(supabase, {
+      ...attemptContext,
+      status: "server_error",
+      reason: "movie_catalog_seed_failed",
+    });
+
+    return jsonWithDeviceCookie(
+      request,
+      { error: "Could not prepare voting." },
+      { status: 500 },
+      trustedDevice.cookieValue,
+    );
+  }
 
   if (movieError || !movie) {
-    return Response.json({ error: "Selected movie was not found." }, { status: 400 });
+    console.error("Movie lookup failed:", {
+      movieId: body.movieId,
+      movieError,
+    });
+    await logVoteAttempt(supabase, {
+      ...attemptContext,
+      status: "invalid_movie",
+      reason: "inactive_or_missing_movie",
+    });
+
+    return jsonWithDeviceCookie(
+      request,
+      { error: "Invalid movie selection." },
+      { status: 400 },
+      trustedDevice.cookieValue,
+    );
   }
 
-  const existingVote = await getExistingVote(deviceId);
+  const existingVote = await getExistingVote(supabase, trustedDevice.deviceId);
 
   if (existingVote) {
-    return Response.json(
+    await logVoteAttempt(supabase, {
+      ...attemptContext,
+      status: "duplicate_vote",
+      reason: "device_already_voted",
+    });
+
+    return jsonWithDeviceCookie(
+      request,
       {
         error: "Already voted.",
         vote: existingVote.vote,
         movie: existingVote.movie,
       },
       { status: 409 },
+      trustedDevice.cookieValue,
     );
   }
 
-  const ipAddress =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-real-ip");
-  const userAgent = request.headers.get("user-agent");
-  const ipHash = hashRequestSignal(ipAddress);
-  const userAgentHash = hashRequestSignal(userAgent);
-
+  const suspiciousReason = await getSuspiciousProfileReason(supabase, body);
   const { data: voter, error: voterError } = await supabase
     .from("voters")
     .upsert(
       {
-        device_id: deviceId,
-        name: profile.name.trim(),
-        year_of_study: profile.year,
-        department: profile.department,
-        ip_hash: ipHash,
-        user_agent_hash: userAgentHash,
+        device_id: trustedDevice.deviceId,
+        name: body.profile.name,
+        year_of_study: body.profile.year,
+        department: body.profile.department,
+        ip_hash: attemptContext.ipHash,
+        user_agent_hash: attemptContext.userAgentHash,
       },
       { onConflict: "device_id" },
     )
@@ -122,98 +296,262 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (voterError || !voter) {
-    return Response.json(
+    console.error("Voter upsert failed:", {
+      deviceId: trustedDevice.deviceId,
+      voterError,
+    });
+    await logVoteAttempt(supabase, {
+      ...attemptContext,
+      status: "server_error",
+      reason: "voter_upsert_failed",
+    });
+
+    return jsonWithDeviceCookie(
+      request,
       { error: "Could not save voter profile." },
       { status: 500 },
+      trustedDevice.cookieValue,
     );
   }
 
   const votedAt = new Date().toISOString();
-  const { data: vote, error: voteError } = await supabase
-    .from("votes")
-    .insert({
-      movie_id: movieId,
-      voter_id: voter.id,
-      device_id: deviceId,
-      ip_hash: ipHash,
-      user_agent_hash: userAgentHash,
-      voted_at: votedAt,
-    })
-    .select("movie_id,device_id,voted_at")
-    .single();
+  const { vote, error: voteError } = await insertVote({
+    supabase,
+    movieId: body.movieId,
+    voterId: voter.id,
+    deviceId: trustedDevice.deviceId,
+    ipHash: attemptContext.ipHash,
+    userAgentHash: attemptContext.userAgentHash,
+    votedAt,
+  });
 
   if (isUniqueViolation(voteError)) {
-    const duplicateVote = await getExistingVote(deviceId);
+    console.error("Duplicate vote insert blocked:", {
+      deviceId: trustedDevice.deviceId,
+      movieId: body.movieId,
+    });
 
-    return Response.json(
+    const duplicateVote = await getExistingVote(supabase, trustedDevice.deviceId);
+    await logVoteAttempt(supabase, {
+      ...attemptContext,
+      status: "duplicate_vote",
+      reason: "unique_constraint",
+    });
+
+    return jsonWithDeviceCookie(
+      request,
       {
         error: "Already voted.",
         vote: duplicateVote?.vote ?? null,
         movie: duplicateVote?.movie ?? null,
       },
       { status: 409 },
+      trustedDevice.cookieValue,
     );
   }
 
   if (voteError || !vote) {
-    return Response.json({ error: "Could not record vote." }, { status: 500 });
+    console.error("Vote insert failed:", {
+      deviceId: trustedDevice.deviceId,
+      movieId: body.movieId,
+      voterId: voter.id,
+      voteError,
+    });
+    await logVoteAttempt(supabase, {
+      ...attemptContext,
+      status: "server_error",
+      reason: "vote_insert_failed",
+    });
+
+    return jsonWithDeviceCookie(
+      request,
+      { error: "Could not record vote." },
+      { status: 500 },
+      trustedDevice.cookieValue,
+    );
   }
 
-  return Response.json({
-    success: true,
-    vote: {
-      movieId: vote.movie_id,
-      deviceId: vote.device_id,
-      votedAt: vote.voted_at,
-    },
-    movie: mapMovieRow(movie),
+  await logVoteAttempt(supabase, {
+    ...attemptContext,
+    status: "success",
+    reason: suspiciousReason,
   });
+
+  return jsonWithDeviceCookie(
+    request,
+    {
+      success: true,
+      vote: {
+        movieId: vote.movie_id,
+        deviceId: vote.device_id,
+        votedAt: vote.voted_at,
+      },
+      movie: mapMovieRow(movie),
+    },
+    { status: 200 },
+    trustedDevice.cookieValue,
+  );
 }
 
-function validateVoteRequest(body: VoteRequestBody) {
-  if (!body || typeof body !== "object") {
-    return "Request body is required.";
+async function getPollSettings(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+) {
+  const firstLookup = await supabase
+    .from("poll_settings")
+    .select("id,is_open,event_status,poll_starts_at,poll_closes_at")
+    .eq("id", "main")
+    .single();
+
+  if (!isMissingPollStartsAt(firstLookup.error)) {
+    return firstLookup;
   }
 
-  if (typeof body.deviceId !== "string" || !body.deviceId.trim()) {
-    return "deviceId is required.";
-  }
+  const fallbackLookup = await supabase
+    .from("poll_settings")
+    .select("id,is_open,event_status,poll_closes_at")
+    .eq("id", "main")
+    .single();
 
-  if (typeof body.movieId !== "string" || !body.movieId.trim()) {
-    return "movieId is required.";
-  }
-
-  if (!body.profile || typeof body.profile !== "object") {
-    return "profile is required.";
-  }
-
-  if (typeof body.profile.name !== "string" || !body.profile.name.trim()) {
-    return "profile.name is required.";
-  }
-
-  if (typeof body.profile.year !== "string" || !years.has(body.profile.year)) {
-    return "profile.year is invalid.";
-  }
-
-  if (
-    typeof body.profile.department !== "string" ||
-    !departments.has(body.profile.department)
-  ) {
-    return "profile.department is invalid.";
-  }
-
-  return null;
+  return {
+    ...fallbackLookup,
+    data: fallbackLookup.data
+      ? {
+          ...fallbackLookup.data,
+          poll_starts_at: null,
+        }
+      : null,
+  };
 }
 
-async function getExistingVote(deviceId: string) {
-  const supabase = createSupabaseAdminClient();
-  const { data } = await supabase
+function isAllowedOrigin(request: NextRequest) {
+  const origin = request.headers.get("origin");
+
+  if (!origin) {
+    return true;
+  }
+
+  const allowedOrigins = new Set([request.nextUrl.origin]);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  if (siteUrl) {
+    allowedOrigins.add(new URL(siteUrl).origin);
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      const originUrl = new URL(origin);
+      if (originUrl.hostname === "localhost" || originUrl.hostname === "127.0.0.1") {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+  }
+
+  return allowedOrigins.has(origin);
+}
+
+async function getRateLimitStatus(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  context: AttemptContext,
+) {
+  const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const ipAttempts = await supabase
+    .from("vote_attempts")
+    .select("id", { count: "exact", head: true })
+    .eq("ip_hash", context.ipHash)
+    .gte("created_at", since);
+
+  if (ipAttempts.error) {
+    console.error("IP rate limit lookup failed:", ipAttempts.error);
+    return { isLimited: false, reason: null };
+  }
+
+  if ((ipAttempts.count ?? 0) >= 20) {
+    return { isLimited: true, reason: "ip_attempt_limit" };
+  }
+
+  const deviceAttempts = await supabase
+    .from("vote_attempts")
+    .select("id", { count: "exact", head: true })
+    .eq("device_id", context.deviceId)
+    .gte("created_at", since);
+
+  if (deviceAttempts.error) {
+    console.error("Device rate limit lookup failed:", deviceAttempts.error);
+    return { isLimited: false, reason: null };
+  }
+
+  if ((deviceAttempts.count ?? 0) >= 5) {
+    return { isLimited: true, reason: "device_attempt_limit" };
+  }
+
+  return { isLimited: false, reason: null };
+}
+
+async function logVoteAttempt(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  {
+    ipHash,
+    userAgentHash,
+    deviceId,
+    movieId = null,
+    status,
+    reason = null,
+  }: AttemptContext & {
+    status: AttemptStatus;
+    reason?: string | null;
+  },
+) {
+  const { error } = await supabase.from("vote_attempts").insert({
+    ip_hash: ipHash,
+    user_agent_hash: userAgentHash,
+    device_id: deviceId,
+    movie_id: movieId,
+    status,
+    reason,
+  });
+
+  if (error) {
+    console.error("Vote attempt logging failed:", error);
+  }
+}
+
+async function getSuspiciousProfileReason(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  body: VoteRequestBody,
+) {
+  const { count, error } = await supabase
+    .from("voters")
+    .select("id", { count: "exact", head: true })
+    .eq("name", body.profile.name)
+    .eq("year_of_study", body.profile.year)
+    .eq("department", body.profile.department);
+
+  if (error) {
+    console.error("Suspicious profile lookup failed:", error);
+    return null;
+  }
+
+  return (count ?? 0) > 0 ? "suspicious_duplicate_profile" : null;
+}
+
+async function getExistingVote(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  deviceId: string,
+) {
+  const { data, error } = await supabase
     .from("votes")
-    .select(
-      "movie_id,device_id,voted_at,movies(id,title,language,genre,runtime,rating,hook,summary,why_screen,poster_url,backdrop_url)",
-    )
+    .select(`movie_id,device_id,voted_at,movies(${movieSelect})`)
     .eq("device_id", deviceId)
     .maybeSingle();
+
+  if (error) {
+    console.error("Existing vote lookup failed:", {
+      deviceId,
+      error,
+    });
+  }
 
   if (!data) {
     return null;
@@ -231,34 +569,157 @@ async function getExistingVote(deviceId: string) {
   };
 }
 
-function mapMovieRow(row: {
-  id: string;
-  title: string;
-  language: string;
-  genre: string;
-  runtime: string;
-  rating: string;
-  hook: string;
-  summary: string;
-  why_screen: string;
-  poster_url: string;
-  backdrop_url: string;
+function isUniqueViolation(error: SupabaseError | null) {
+  return error?.code === "23505";
+}
+
+async function insertVote({
+  supabase,
+  movieId,
+  voterId,
+  deviceId,
+  ipHash,
+  userAgentHash,
+  votedAt,
+}: {
+  supabase: ReturnType<typeof createSupabaseAdminClient>;
+  movieId: string;
+  voterId: string;
+  deviceId: string;
+  ipHash: string;
+  userAgentHash: string | null;
+  votedAt: string;
 }) {
+  const insertPayload = {
+    movie_id: movieId,
+    voter_id: voterId,
+    device_id: deviceId,
+    ip_hash: ipHash,
+    user_agent_hash: userAgentHash,
+    voted_at: votedAt,
+  };
+  const firstAttempt = await supabase
+    .from("votes")
+    .insert(insertPayload)
+    .select("movie_id,device_id,voted_at")
+    .single();
+
+  if (!isMissingSchemaColumn(firstAttempt.error)) {
+    return {
+      vote: firstAttempt.data,
+      error: firstAttempt.error,
+    };
+  }
+
+  console.error("Vote hash columns are unavailable, retrying core insert:", {
+    error: firstAttempt.error,
+  });
+
+  const retryAttempt = await supabase
+    .from("votes")
+    .insert({
+      movie_id: movieId,
+      voter_id: voterId,
+      device_id: deviceId,
+      voted_at: votedAt,
+    })
+    .select("movie_id,device_id,voted_at")
+    .single();
+
   return {
-    id: row.id,
-    title: row.title,
-    language: row.language,
-    genre: row.genre,
-    runtime: row.runtime,
-    rating: row.rating,
-    hook: row.hook,
-    summary: row.summary,
-    whyScreen: row.why_screen,
-    posterUrl: row.poster_url,
-    backdropUrl: row.backdrop_url,
+    vote: retryAttempt.data,
+    error: retryAttempt.error,
   };
 }
 
-function isUniqueViolation(error: SupabaseError | null) {
-  return error?.code === "23505";
+function getPollGateError({
+  isOpen,
+  pollStartsAt,
+  pollClosesAt,
+  now,
+}: {
+  isOpen: boolean;
+  pollStartsAt: string | null;
+  pollClosesAt: string | null;
+  now: Date;
+}) {
+  if (!isOpen) {
+    return {
+      status: "poll_closed" as const,
+      reason: "manual_close",
+      message: "Poll is closed",
+    };
+  }
+
+  if (!pollStartsAt || !pollClosesAt) {
+    return {
+      status: "schedule_missing" as const,
+      reason: "missing_schedule",
+      message: "Poll schedule is not configured",
+    };
+  }
+
+  const startsAt = new Date(pollStartsAt).getTime();
+  const closesAt = new Date(pollClosesAt).getTime();
+  const currentTime = now.getTime();
+
+  if (!Number.isFinite(startsAt) || !Number.isFinite(closesAt)) {
+    return {
+      status: "schedule_missing" as const,
+      reason: "invalid_schedule",
+      message: "Poll schedule is not configured",
+    };
+  }
+
+  if (currentTime < startsAt) {
+    return {
+      status: "poll_not_started" as const,
+      reason: "before_start",
+      message: "Poll has not started yet",
+    };
+  }
+
+  if (currentTime >= closesAt) {
+    return {
+      status: "poll_closed" as const,
+      reason: "after_close",
+      message: "Poll is closed",
+    };
+  }
+
+  return null;
+}
+
+function jsonWithDeviceCookie(
+  request: NextRequest,
+  body: unknown,
+  init: ResponseInit,
+  deviceCookieValue: string | null,
+) {
+  const response = NextResponse.json(body, init);
+
+  if (deviceCookieValue) {
+    response.cookies.set(
+      DEVICE_COOKIE_NAME,
+      deviceCookieValue,
+      getDeviceCookieOptions(),
+    );
+  }
+
+  return response;
+}
+
+function isMissingSchemaColumn(error: SupabaseError | null) {
+  return (
+    error?.code === "PGRST204" ||
+    error?.message?.includes("schema cache") ||
+    error?.message?.includes("column")
+  );
+}
+
+function isMissingPollStartsAt(error: SupabaseError | null) {
+  return (
+    error?.code === "42703" ||
+    Boolean(error?.message?.includes("poll_starts_at"))
+  );
 }
