@@ -6,6 +6,7 @@ import {
   getDeviceCookieOptions,
   getOrCreateTrustedDeviceId,
 } from "@/lib/device-cookie";
+import { createDemoTicket, TICKET_DEMO_MODE } from "@/lib/demo-ticketing";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import {
   getBookedTicketCount,
@@ -54,19 +55,6 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Could not verify device." }, { status: 500 });
   }
 
-  let supabase: ReturnType<typeof createSupabaseAdminClient>;
-
-  try {
-    supabase = createSupabaseAdminClient();
-  } catch (error) {
-    console.error("Ticket booking Supabase client error:", error);
-    return jsonWithDeviceCookie(
-      { error: "Ticket booking is not configured." },
-      { status: 500 },
-      trustedDevice.cookieValue,
-    );
-  }
-
   let rawBody: unknown;
 
   try {
@@ -85,6 +73,34 @@ export async function POST(request: NextRequest) {
     return jsonWithDeviceCookie(
       { error: "Invalid ticket request." },
       { status: 400 },
+      trustedDevice.cookieValue,
+    );
+  }
+
+  if (TICKET_DEMO_MODE) {
+    return jsonWithDeviceCookie(
+      {
+        ticket: createDemoTicket({
+          ticketCode: createTicketCode(),
+          studentName: parsedBody.data.profile.name,
+          year: parsedBody.data.profile.year,
+          department: parsedBody.data.profile.department,
+        }),
+      },
+      { status: 200 },
+      trustedDevice.cookieValue,
+    );
+  }
+
+  let supabase: ReturnType<typeof createSupabaseAdminClient>;
+
+  try {
+    supabase = createSupabaseAdminClient();
+  } catch (error) {
+    console.error("Ticket booking Supabase client error:", error);
+    return jsonWithDeviceCookie(
+      { error: "Ticket booking is not configured." },
+      { status: 500 },
       trustedDevice.cookieValue,
     );
   }

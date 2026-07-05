@@ -1,0 +1,28 @@
+export const introPosters = [
+  "/intro-posters/poster-01.webp",
+  "/intro-posters/poster-02.webp",
+  "/intro-posters/poster-03.webp",
+  "/intro-posters/poster-04.webp",
+  "/intro-posters/poster-05.webp",
+  "/intro-posters/poster-06.webp",
+  "/intro-posters/poster-07.webp",
+  "/intro-posters/poster-08.webp",
+  "/intro-posters/poster-09.webp",
+  "/intro-posters/poster-10.webp",
+  "/intro-posters/poster-11.webp",
+  "/intro-posters/poster-12.webp",
+  "/intro-posters/poster-13.webp",
+  "/intro-posters/poster-14.webp",
+  "/intro-posters/poster-15.webp",
+  "/intro-posters/poster-16.webp",
+  "/intro-posters/poster-17.webp",
+  "/intro-posters/poster-18.webp",
+  "/intro-posters/poster-19.webp",
+  "/intro-posters/poster-20.webp",
+  "/intro-posters/poster-21.webp",
+  "/intro-posters/poster-22.webp",
+  "/intro-posters/poster-23.webp",
+  "/intro-posters/poster-24.webp",
+] as const;
+
+export const introPosterCount = introPosters.length;

@@ -1,11 +1,13 @@
 import { CinematicMarquee } from "@/components/landing/CinematicMarquee";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { PollCountdown } from "@/components/landing/PollCountdown";
+import { CineVoteIntro } from "@/components/intro/CineVoteIntro";
 import { FilmGrain } from "@/components/layout/FilmGrain";
 
 export default function Home() {
   return (
     <main className="relative min-h-dvh overflow-hidden safe-bottom-lg">
+      <CineVoteIntro />
       <FilmGrain />
       <a
         href="/admin"

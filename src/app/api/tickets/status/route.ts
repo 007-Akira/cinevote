@@ -4,6 +4,14 @@ import {
   getDeviceCookieOptions,
   getOrCreateTrustedDeviceId,
 } from "@/lib/device-cookie";
+import {
+  DEMO_BOOKED_TICKETS,
+  DEMO_EVENT_DATE,
+  DEMO_TOTAL_TICKETS,
+  DEMO_VENUE,
+  getDemoWinningMovie,
+  TICKET_DEMO_MODE,
+} from "@/lib/demo-ticketing";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import {
   getBookedTicketCount,
@@ -24,6 +32,26 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Ticket status device cookie setup failed:", error);
     return Response.json({ error: "Could not verify device." }, { status: 500 });
+  }
+
+  if (TICKET_DEMO_MODE) {
+    return jsonWithDeviceCookie(
+      {
+        isLive: true,
+        reason: "demo",
+        totalTickets: DEMO_TOTAL_TICKETS,
+        bookedTickets: DEMO_BOOKED_TICKETS,
+        remainingTickets: DEMO_TOTAL_TICKETS - DEMO_BOOKED_TICKETS,
+        bookingStartsAt: null,
+        bookingClosesAt: null,
+        eventDate: DEMO_EVENT_DATE,
+        venue: DEMO_VENUE,
+        winningMovie: getDemoWinningMovie(),
+        existingTicket: null,
+      },
+      { status: 200 },
+      trustedDevice.cookieValue,
+    );
   }
 
   let supabase: ReturnType<typeof createSupabaseAdminClient>;
