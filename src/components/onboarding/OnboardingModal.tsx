@@ -35,13 +35,13 @@ export function OnboardingModal({ isOpen, onComplete }: OnboardingModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end bg-cine-black/78 px-3 pb-4 backdrop-blur-sm sm:items-center sm:px-5 sm:pb-5"
+      className="fixed inset-0 z-[60] flex items-center overflow-y-auto bg-cine-black/78 px-3 py-4 backdrop-blur-sm sm:px-5 sm:py-5"
       role="dialog"
       aria-modal="true"
       aria-labelledby="onboarding-title"
     >
       <form
-        className="glass-card red-trace-border mx-auto w-full max-w-lg space-y-6 rounded-t-2xl p-5 shadow-2xl shadow-black/80 safe-bottom sm:space-y-5 sm:rounded-2xl sm:p-6"
+        className="glass-card red-trace-border mx-auto my-auto w-full max-w-lg space-y-5 rounded-2xl p-5 shadow-2xl shadow-black/80 safe-bottom sm:p-6"
         onSubmit={(event) => {
           event.preventDefault();
 

@@ -83,10 +83,12 @@ const cardStyles = [
 
 export function PosterStack() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [clientReady, setClientReady] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const featuredMovies = useMemo(() => getFeaturedMovies(), []);
 
   useEffect(() => {
+    const readyTimer = window.setTimeout(() => setClientReady(true), 0);
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     function handleMotionPreferenceChange() {
@@ -97,6 +99,7 @@ export function PosterStack() {
     mediaQuery.addEventListener("change", handleMotionPreferenceChange);
 
     return () => {
+      window.clearTimeout(readyTimer);
       mediaQuery.removeEventListener("change", handleMotionPreferenceChange);
     };
   }, []);
@@ -116,7 +119,11 @@ export function PosterStack() {
   }, [featuredMovies.length, prefersReducedMotion]);
 
   return (
-    <div className="relative mx-auto h-[26rem] w-full max-w-xs sm:h-[31rem] sm:max-w-sm lg:mx-0">
+    <div
+      className={`poster-stack relative mx-auto h-[26rem] w-full max-w-xs sm:h-[31rem] sm:max-w-sm lg:mx-0 ${
+        clientReady ? "poster-stack--ready" : ""
+      }`}
+    >
       <div className="absolute inset-x-6 bottom-2 h-20 rounded-full bg-cine-red/30 blur-3xl" />
       {featuredMovies.map((movie, index) => {
         const position = (index - activeIndex + featuredMovies.length) % featuredMovies.length;
@@ -125,13 +132,14 @@ export function PosterStack() {
         return (
         <article
           key={movie.id}
-          className={`absolute left-1/2 top-6 flex aspect-[2/3] flex-col justify-between overflow-hidden rounded-lg border border-white/15 bg-cine-card bg-cover bg-center p-4 shadow-2xl shadow-black/70 transition-all duration-700 ease-out motion-reduce:transition-none ${cardStyle.widthClass} ${cardStyle.shadowClass}`}
+          className={`poster-stack__card absolute left-1/2 top-6 flex aspect-[2/3] flex-col justify-between overflow-hidden rounded-lg border border-white/15 bg-cine-card bg-cover bg-center p-4 shadow-2xl shadow-black/70 transition-all duration-700 ease-out motion-reduce:transition-none ${cardStyle.widthClass} ${cardStyle.shadowClass}`}
           style={{
+            "--poster-card-index": index,
             zIndex: cardStyle.zIndex,
             opacity: cardStyle.opacity,
             transform: cardStyle.transform,
             backgroundImage: `linear-gradient(180deg, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.78)), url(${movie.posterUrl})`,
-          }}
+          } as React.CSSProperties}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_20%,rgb(255_255_255_/_0.2),transparent_34%)]" />
           {position === 0 ? (

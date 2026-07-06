@@ -32,12 +32,12 @@ function hasSeenIntro() {
 }
 
 export function CineVoteIntro() {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [exiting, setExiting] = useState(false);
   const [tunnelCleared, setTunnelCleared] = useState(false);
   const [logoVisible, setLogoVisible] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [mobileIntro, setMobileIntro] = useState(false);
+  const [mobileIntro, setMobileIntro] = useState(true);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
 
   const rows = useMemo(
@@ -61,7 +61,9 @@ export function CineVoteIntro() {
 
   useEffect(() => {
     if (hasSeenIntro()) {
-      return;
+      const hideTimer = window.setTimeout(() => setVisible(false), 0);
+
+      return () => window.clearTimeout(hideTimer);
     }
 
     const prefersReducedMotion = window.matchMedia(
@@ -71,16 +73,16 @@ export function CineVoteIntro() {
       "(max-width: 640px), (pointer: coarse)",
     ).matches;
 
-    setReducedMotion(prefersReducedMotion);
-    setMobileIntro(prefersMobileIntro);
-    setVisible(true);
-
     const clearAt = prefersMobileIntro ? 3200 : 2860;
     const logoAt = prefersMobileIntro ? 3360 : 3100;
     const exitAt = prefersMobileIntro ? 3760 : 3740;
     const doneAt = prefersMobileIntro ? 4050 : INTRO_DURATION_MS;
     const timers = prefersReducedMotion
       ? [
+          window.setTimeout(() => {
+            setReducedMotion(prefersReducedMotion);
+            setMobileIntro(prefersMobileIntro);
+          }, 0),
           window.setTimeout(() => setExiting(true), 620),
           window.setTimeout(() => {
             markIntroSeen();
@@ -88,6 +90,10 @@ export function CineVoteIntro() {
           }, REDUCED_MOTION_DURATION_MS),
         ]
       : [
+          window.setTimeout(() => {
+            setReducedMotion(prefersReducedMotion);
+            setMobileIntro(prefersMobileIntro);
+          }, 0),
           window.setTimeout(() => setTunnelCleared(true), clearAt),
           window.setTimeout(() => setLogoVisible(true), logoAt),
           window.setTimeout(() => setExiting(true), exitAt),
@@ -143,7 +149,8 @@ export function CineVoteIntro() {
                           alt=""
                           decoding="async"
                           draggable={false}
-                          loading={rowIndex < 3 ? "eager" : "lazy"}
+                          fetchPriority={rowIndex < 2 ? "high" : "auto"}
+                          loading={rowIndex < 2 ? "eager" : "lazy"}
                           src={poster.src}
                           onError={() =>
                             setFailedImages((current) => ({
